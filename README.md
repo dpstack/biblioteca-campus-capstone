@@ -24,7 +24,7 @@ Jest y React Testing Library prueban los componentes `BookCard`, `SiteLayout` y 
 
 ## Estado actual
 
-**Actualización del capstone (9 de octubre de 2026):** lectura persistida; orden global por fecha, popularidad y autor con el alcance descrito abajo; teclado y foco de navegación; mobile-first; carga diferida de rutas y autenticación. Pasaron 46 pruebas Jest, 14 de navegador y comprobaciones reales de préstamos, reservas, lectura y RLS. Consulta [pruebas](docs/TESTING.md), [accesibilidad](docs/ACCESSIBILITY.md) y [rendimiento](docs/PERFORMANCE.md).
+**Actualización del capstone (9 de octubre de 2026):** lectura persistida; orden global por fecha, popularidad y autor con el alcance descrito abajo; teclado y foco de navegación; mobile-first; carga diferida de rutas y autenticación. Pasaron 50 pruebas Jest, 18 de navegador y comprobaciones reales de préstamos, reservas, lectura y RLS. Consulta [pruebas](docs/TESTING.md), [accesibilidad](docs/ACCESSIBILITY.md) y [rendimiento](docs/PERFORMANCE.md).
 
 - Catálogo público con búsqueda por palabra clave, título o autor; categorías, ordenamiento y paginación.
 - Fichas de obras, portadas, descripción, autores y temas.
@@ -88,7 +88,7 @@ La ficha muestra metadatos públicos y, por separado, la disponibilidad real de 
 
 5. Reinicia `npm run dev` y crea una cuenta desde `/acceso`. Nunca coloques la clave `service_role` o una clave secreta en variables `VITE_` ni en el navegador.
 
-La migración deja lectura pública únicamente del número de ejemplares. Cada usuario solo puede leer sus préstamos, reservas y lista de lectura. Las escrituras que cambian existencias se hacen mediante funciones SQL que bloquean las filas para evitar dos préstamos simultáneos del mismo ejemplar. El SQL debe instalarse mediante SQL Editor o una cuenta administrativa, jamás desde el cliente React.
+Las migraciones dejan lectura pública de la colección: metadatos, ejemplares y estado de retiro. Cada usuario solo puede leer sus préstamos, reservas y lista de lectura. Las escrituras que cambian existencias se hacen mediante funciones SQL que bloquean las filas para evitar dos préstamos simultáneos del mismo ejemplar. El SQL debe instalarse mediante SQL Editor o una cuenta administrativa, jamás desde el cliente React.
 
 ## Rutas
 
@@ -98,13 +98,18 @@ Inicia sesión y abre `/libro/OL27448W`, una de las obras del inventario de demo
 
 El selector **Mi estado de lectura** guarda y restaura «Quiero leer», «Leyendo» o «Terminado». Puedes quitar el libro desde la ficha o desde la lista de lectura de Mi biblioteca. Las obras externas sin ejemplares propios permiten organizar lecturas, pero no solicitar préstamos.
 
-| Ruta             | Función                                           |
-| ---------------- | ------------------------------------------------- |
-| `/`              | Inicio y búsqueda rápida                          |
-| `/catalogo`      | Catálogo, filtros, orden y paginación             |
-| `/libro/:workId` | Ficha de obra y acciones de préstamo o reserva    |
-| `/acceso`        | Registro e inicio de sesión                       |
-| `/mi-biblioteca` | Préstamos, historial, reservas y lista de lectura |
+| Ruta              | Función                                                  |
+| ----------------- | -------------------------------------------------------- |
+| `/`               | Inicio y búsqueda rápida                                 |
+| `/catalogo`       | Catálogo, filtros, orden y paginación                    |
+| `/libro/:workId`  | Ficha de obra y acciones de préstamo o reserva           |
+| `/acceso`         | Registro e inicio de sesión                              |
+| `/mi-biblioteca`  | Préstamos, historial, reservas y lista de lectura        |
+| `/administracion` | Gestión de colección y circulación; solo administradores |
+
+## Administración de la colección
+
+El panel `/administracion` permite buscar obras en Open Library, añadirlas a la colección, ajustar ejemplares, retirar/reactivar obras y consultar préstamos y reservas. El rol se verifica en Supabase en cada operación. Consulta [activación y demostración](docs/ADMINISTRATION.md).
 
 ## Arquitectura y límites
 
@@ -112,11 +117,11 @@ Consulta [el diagrama, los flujos y el modelo de datos](docs/ARCHITECTURE.md). `
 
 ### Límites conocidos
 
-- El ordenamiento se aplica a los 24 resultados de la página visible; «más ediciones» es una aproximación a popularidad, no una métrica de préstamos.
-- La cola de reservas se protege en la base de datos, pero todavía no hay avisos automáticos ni una indicación especial para quien tiene el siguiente turno. La interfaz puede ofrecer un préstamo que la cola rechace.
-- La lista de lectura admite «Quiero leer», «Leyendo» y «Terminado», pero no incluye una acción visible para quitar un libro ni notificaciones de disponibilidad.
-- El archivo JavaScript inicial genera una advertencia de tamaño en la compilación. Solo la ruta «Mi biblioteca» usa división de código actualmente.
-- Las reservas y la lista de lectura todavía requieren validación completa con una cuenta autenticada en producción.
+- Autor A–Z ordena búsquedas completas de hasta 200 obras antes de paginar; búsquedas mayores deben afinarse. Fecha y popularidad usan el orden de la API; popularidad no mide préstamos institucionales.
+- La cola se protege en el servidor. La ficha puede ofrecer un préstamo que se rechace por prioridad de una reserva ajena. El panel muestra los turnos por obra; no hay avisos automáticos.
+- La búsqueda administrativa presenta los primeros 24 resultados; afinar título o autor permite localizar una obra concreta. Los roles se asignan desde SQL Editor.
+- Las rutas y Supabase se cargan de forma diferida. Las mediciones móviles con red y CPU limitadas siguen mostrando oportunidades de mejora; PERFORMANCE.md conserva resultados y procedencia anteriores a esta ampliación.
+- Falta revisión auditiva humana con NVDA/Narrador; las pruebas de teclado y axe no certifican accesibilidad completa.
 
 Antes de un uso institucional: cargar inventario real, decidir políticas de préstamos y reservas, configurar correo de confirmación y recuperación, añadir pruebas contra un proyecto Supabase de **pruebas** y revisar accesibilidad con teclado y lector de pantalla. El despliegue usa HTTPS; configura en Supabase las URLs permitidas para autenticación y redirecciones. No publiques `.env.local` ni utilices una clave `service_role` en variables `VITE_`.
 

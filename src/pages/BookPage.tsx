@@ -216,6 +216,17 @@ function BookDetail({ workId }: { workId: string }) {
                 </p>
               </div>
             </div>
+          ) : inventory?.retired ? (
+            <div className="stock-message">
+              <span className="stock-dot" />
+              <div>
+                <strong>Retirada de la colección activa</strong>
+                <p>
+                  Esta obra no admite nuevos préstamos ni reservas. Los
+                  préstamos existentes pueden devolverse desde Mi biblioteca.
+                </p>
+              </div>
+            </div>
           ) : inventory ? (
             <div
               className={`stock-message ${inventory.available_copies > 0 ? "in-stock" : ""}`}
@@ -245,7 +256,7 @@ function BookDetail({ workId }: { workId: string }) {
               </div>
             </div>
           )}
-          {session && inventory && !inventoryError && (
+          {session && inventory && !inventory.retired && !inventoryError && (
             <button
               className="button button-primary action-button"
               type="button"

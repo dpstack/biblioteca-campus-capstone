@@ -24,7 +24,7 @@ export async function getInventory(
   if (!supabase || workIds.length === 0) return [];
   const { data, error } = await supabase
     .from("library_books")
-    .select("work_id,total_copies,available_copies")
+    .select("work_id,total_copies,available_copies,retired")
     .in("work_id", workIds);
   throwIfError(error);
   return (data ?? []) as InventoryItem[];

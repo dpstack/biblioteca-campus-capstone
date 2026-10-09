@@ -16,6 +16,7 @@ const AuthPage = lazy(() =>
 );
 
 const AccountPage = lazy(() => import("./pages/AccountPage"));
+const AdminPage = lazy(() => import("./pages/AdminPage"));
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
             <Route path="libro/:workId" element={<BookPage />} />
             <Route path="acceso" element={<AuthPage />} />
             <Route path="mi-biblioteca" element={<AccountPage />} />
+            <Route path="administracion" element={<AdminPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

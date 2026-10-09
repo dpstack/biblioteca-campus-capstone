@@ -34,9 +34,13 @@ export function BookCard({
           )}
           {inventory && (
             <span
-              className={`${styles.stock} ${inventory.available_copies > 0 ? styles.available : ""}`}
+              className={`${styles.stock} ${!inventory.retired && inventory.available_copies > 0 ? styles.available : ""}`}
             >
-              {inventory.available_copies > 0 ? "Disponible" : "En préstamo"}
+              {inventory.retired
+                ? "Retirada"
+                : inventory.available_copies > 0
+                  ? "Disponible"
+                  : "En préstamo"}
             </span>
           )}
         </div>

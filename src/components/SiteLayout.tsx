@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/auth-context";
 import { isSupabaseConfigured } from "../lib/config";
+import { AdminLink } from "./AdminLink";
 
 const navLinks = [
   { to: "/", label: "Inicio", end: true },
@@ -88,6 +89,7 @@ export function SiteLayout() {
                 {label}
               </NavLink>
             ))}
+            <AdminLink onNavigate={() => setMenuOpen(false)} />
             <Link
               to={session ? "/mi-biblioteca" : "/acceso"}
               className="header-account"

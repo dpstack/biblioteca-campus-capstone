@@ -1358,7 +1358,7 @@ main {
 }
 .account-stats small {
   font-size: 10px;
-  color: #8a9a8e;
+  color: #536558;
 }
 .account-tabs {
   display: flex;
@@ -2160,5 +2160,93 @@ main {
   *::after {
     animation: none !important;
     transition: none !important;
+  }
+}
+.admin-page {
+  padding-block: 40px 70px;
+}
+.admin-intro {
+  margin-bottom: 28px;
+}
+.admin-intro h1 {
+  margin-block: 12px;
+}
+.admin-section {
+  margin-block: 28px;
+  padding: 20px;
+  border: 1px solid #deddd6;
+  border-radius: 14px;
+  background: #fff;
+}
+.admin-section h2 {
+  font-size: 1.4rem;
+  margin-bottom: 20px;
+}
+.admin-search,
+.admin-editor {
+  display: grid;
+  gap: 12px;
+}
+.admin-search input,
+.admin-editor input[type="number"] {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #777;
+  border-radius: 7px;
+  padding: 12px;
+}
+.admin-check {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.admin-check input {
+  width: 20px;
+  height: 20px;
+}
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.admin-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 18px;
+}
+.admin-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 0;
+  border-bottom: 1px solid #deddd6;
+  overflow-wrap: anywhere;
+}
+.admin-list p {
+  margin: 7px 0;
+}
+.admin-list li > div {
+  min-width: 0;
+}
+.admin-list .button {
+  flex-shrink: 0;
+}
+@media (min-width: 651px) {
+  .admin-list li {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .admin-editor {
+    max-width: 640px;
+  }
+}
+@media (min-width: 851px) {
+  .admin-search {
+    grid-template-columns: 1fr auto;
+    align-items: end;
+  }
+  .admin-search label {
+    grid-column: 1 / -1;
   }
 }
