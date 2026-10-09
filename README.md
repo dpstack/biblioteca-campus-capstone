@@ -2,9 +2,29 @@
 
 SPA de biblioteca universitaria basada en React, TypeScript y Vite. Los metadatos y portadas provienen de [Open Library](https://openlibrary.org/developers/api); las cuentas, el inventario propio, los préstamos, las reservas y la lista de lectura se almacenan en Supabase.
 
-> **Estado:** prototipo académico funcional. No está desplegado ni preparado para operar con el inventario real de una universidad. Este repositorio no contiene credenciales, cuentas de prueba ni el PDF de la asignatura.
+> **Estado:** aplicación académica desplegada en Vercel. Inventario de demostración; no representa existencias reales de una universidad.
+
+## Laboratorio Semana 6
+
+**URL pública:** https://biblioteca-campus-capstone-dpstacks-projects.vercel.app
+
+Consulta [el entregable y la verificación del laboratorio](docs/LAB_SEMANA_6.md).
+
+```bash
+npm ci
+npm test
+npm run test:coverage
+```
+
+Jest y React Testing Library prueban los componentes `BookCard`, `SiteLayout` y `AuthPage`, el hook `useAuth`, la restauración de sesión y el flujo de tokens con el SDK real y HTTP simulado. Las pruebas unitarias no necesitan credenciales ni conexión externa. Playwright permanece disponible con `npm run test:e2e`.
+
+**Verificación del laboratorio (9 de octubre de 2026):** seis suites y 17 pruebas Jest aprobadas; TypeScript y Vite compilados correctamente. Se observaron catálogo, disponibilidad, protección de rutas y carga del historial con una sesión real en producción. El usuario confirmó manualmente registro, recepción de correo, inicio con contraseña y cierre de sesión. Consulta la documentación del laboratorio para distinguir comprobaciones manuales y automatizadas.
+
+**Autenticación:** Supabase Auth valida correo y contraseña y devuelve access token JWT y refresh token. El SDK persiste la sesión en localStorage, renueva el access token y lo envía como `Authorization: Bearer <token>` al backend REST. `AuthProvider` sincroniza cambios de sesión; Mi biblioteca redirige visitantes al formulario. Las políticas RLS y las funciones SQL autorizan las operaciones en el servidor. Cerrar sesión revoca los refresh tokens y elimina la sesión local. Los JWT emitidos pueden seguir siendo válidos hasta su expiración; el cierre no invalida instantáneamente todos los access tokens. localStorage es accesible a JavaScript: evitar scripts no confiables y mantener la prevención de XSS; nunca guardar contraseñas ni claves secretas en el cliente. La clave publishable identifica el proyecto, no sustituye el token del usuario.
 
 ## Estado actual
+
+**Actualización del capstone (9 de octubre de 2026):** lectura persistida; orden global por fecha, popularidad y autor con el alcance descrito abajo; teclado y foco de navegación; mobile-first; carga diferida de rutas y autenticación. Pasaron 46 pruebas Jest, 14 de navegador y comprobaciones reales de préstamos, reservas, lectura y RLS. Consulta [pruebas](docs/TESTING.md), [accesibilidad](docs/ACCESSIBILITY.md) y [rendimiento](docs/PERFORMANCE.md).
 
 - Catálogo público con búsqueda por palabra clave, título o autor; categorías, ordenamiento y paginación.
 - Fichas de obras, portadas, descripción, autores y temas.
@@ -14,11 +34,11 @@ SPA de biblioteca universitaria basada en React, TypeScript y Vite. Los metadato
 
 **Configuración:** cada instalación necesita su propio `.env.local` con la URL y la clave publicable de Supabase. El archivo local está excluido de Git. La migración incluida crea tres obras de ejemplo; no representa existencias institucionales reales.
 
-**Verificación (8 de octubre de 2026):** el inicio de sesión, la carga de «Mi biblioteca», un préstamo y su devolución se comprobaron de extremo a extremo con una cuenta de demostración; el inventario regresó a su valor inicial. La compilación, el análisis estático y las ocho pruebas automatizadas de navegador también pasaron. Las reservas y la escritura de la lista de lectura aún requieren pruebas de extremo a extremo. Consulta [la matriz de pruebas y pendientes](docs/TESTING.md).
+**Alcance del catálogo:** Autor A–Z ordena todos los resultados de búsquedas de hasta 200 obras antes de paginar. Si hay más, pide afinar la búsqueda; nunca presenta un orden parcial como global. Es el alcance elegido para mantener Open Library. La colección de demostración contiene tres obras. Las notificaciones de disponibilidad son una función opcional pendiente.
 
 ## Ejecutar localmente
 
-Requisitos: Node.js 20.19+ o 22.12+ y npm. Primero configura Supabase como se explica más abajo; después, desde la raíz de este proyecto:
+Requisitos: Node.js 24 LTS y npm. Primero configura Supabase como se explica más abajo; después, desde la raíz de este proyecto:
 
 ```bash
 npm ci
@@ -72,6 +92,12 @@ La migración deja lectura pública únicamente del número de ejemplares. Cada 
 
 ## Rutas
 
+### Probar préstamos y lecturas
+
+Inicia sesión y abre `/libro/OL27448W`, una de las obras del inventario de demostración. En la ficha, **Solicitar préstamo** registra el vencimiento a 14 días. En **Mi biblioteca → Préstamos**, **Devolver** restaura el ejemplar y conserva el historial. Cuando una obra no tiene ejemplares disponibles, la ficha permite **Reservar**; la cuenta puede cancelar su reserva. La primera reserva tiene prioridad cuando regresa un ejemplar.
+
+El selector **Mi estado de lectura** guarda y restaura «Quiero leer», «Leyendo» o «Terminado». Puedes quitar el libro desde la ficha o desde la lista de lectura de Mi biblioteca. Las obras externas sin ejemplares propios permiten organizar lecturas, pero no solicitar préstamos.
+
 | Ruta             | Función                                           |
 | ---------------- | ------------------------------------------------- |
 | `/`              | Inicio y búsqueda rápida                          |
@@ -90,9 +116,9 @@ Consulta [el diagrama, los flujos y el modelo de datos](docs/ARCHITECTURE.md). `
 - La cola de reservas se protege en la base de datos, pero todavía no hay avisos automáticos ni una indicación especial para quien tiene el siguiente turno. La interfaz puede ofrecer un préstamo que la cola rechace.
 - La lista de lectura admite «Quiero leer», «Leyendo» y «Terminado», pero no incluye una acción visible para quitar un libro ni notificaciones de disponibilidad.
 - El archivo JavaScript inicial genera una advertencia de tamaño en la compilación. Solo la ruta «Mi biblioteca» usa división de código actualmente.
-- No hay despliegue público ni variables de producción configuradas en este repositorio.
+- Las reservas y la lista de lectura todavía requieren validación completa con una cuenta autenticada en producción.
 
-Antes de un uso institucional: cargar inventario real, decidir políticas de préstamos y reservas, configurar correo de confirmación y recuperación, añadir pruebas contra un proyecto Supabase de **pruebas** y revisar accesibilidad con teclado y lector de pantalla. El despliegue deberá usar HTTPS y configurar en Supabase las URLs permitidas para autenticación y redirecciones. No publiques `.env.local` ni utilices una clave `service_role` en variables `VITE_`.
+Antes de un uso institucional: cargar inventario real, decidir políticas de préstamos y reservas, configurar correo de confirmación y recuperación, añadir pruebas contra un proyecto Supabase de **pruebas** y revisar accesibilidad con teclado y lector de pantalla. El despliegue usa HTTPS; configura en Supabase las URLs permitidas para autenticación y redirecciones. No publiques `.env.local` ni utilices una clave `service_role` en variables `VITE_`.
 
 ## Fuentes técnicas
 

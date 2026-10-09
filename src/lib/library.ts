@@ -57,6 +57,26 @@ export async function getMyReadingList(): Promise<ReadingListItem[]> {
   return (data ?? []) as ReadingListItem[];
 }
 
+export async function getReadingStatus(
+  workId: string,
+): Promise<ReadingStatus | null> {
+  const { data, error } = await client()
+    .from("reading_list")
+    .select("status")
+    .eq("work_id", workId)
+    .maybeSingle();
+  throwIfError(error);
+  return data?.status ?? null;
+}
+
+export async function removeReadingItem(workId: string): Promise<void> {
+  const { error } = await client()
+    .from("reading_list")
+    .delete()
+    .eq("work_id", workId);
+  throwIfError(error);
+}
+
 export async function setReadingStatus(
   book: BookSnapshot,
   status: ReadingStatus,

@@ -84,13 +84,16 @@ export function HomePage() {
             <div className="visual-circle" />
             <div className="visual-book book-back">
               <img
-                src="https://covers.openlibrary.org/b/id/14650867-L.jpg?default=false"
+                src="https://covers.openlibrary.org/b/id/14650867-M.jpg?default=false"
+                fetchPriority="high"
+                decoding="async"
                 alt=""
               />
             </div>
             <div className="visual-book book-front">
               <img
-                src="https://covers.openlibrary.org/b/id/8228691-L.jpg?default=false"
+                src="https://covers.openlibrary.org/b/id/8228691-M.jpg?default=false"
+                decoding="async"
                 alt=""
               />
             </div>

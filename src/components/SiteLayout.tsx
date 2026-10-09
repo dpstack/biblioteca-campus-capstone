@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   ArrowUpRight,
   BookOpen,
@@ -10,7 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "../context/auth-context";
-import { isSupabaseConfigured } from "../lib/supabase";
+import { isSupabaseConfigured } from "../lib/config";
 
 const navLinks = [
   { to: "/", label: "Inicio", end: true },
@@ -21,13 +21,29 @@ const navLinks = [
 export function SiteLayout() {
   const { session } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const main = useRef<HTMLElement>(null);
+  const { pathname } = useLocation();
+  const previousPath = useRef(pathname);
+  useEffect(() => {
+    if (previousPath.current !== pathname) main.current?.focus();
+    previousPath.current = pathname;
+  }, [pathname]);
 
   return (
     <div className="site-shell">
       <a className="skip-link" href="#contenido">
         Saltar al contenido
       </a>
-      <header className="site-header">
+      <header
+        className="site-header"
+        onKeyDown={(event) => {
+          if (event.key === "Escape" && menuOpen) {
+            setMenuOpen(false);
+            menuButton.current?.focus();
+          }
+        }}
+      >
         <div className="container header-inner">
           <Link
             className="brand"
@@ -44,6 +60,7 @@ export function SiteLayout() {
             </span>
           </Link>
           <button
+            ref={menuButton}
             className="mobile-menu-toggle"
             type="button"
             onClick={() => setMenuOpen((open) => !open)}
@@ -90,8 +107,16 @@ export function SiteLayout() {
           </Link>
         </div>
       )}
-      <main id="contenido">
-        <Outlet />
+      <main id="contenido" ref={main} tabIndex={-1}>
+        <Suspense
+          fallback={
+            <div className="page-status" role="status">
+              Cargando página…
+            </div>
+          }
+        >
+          <Outlet />
+        </Suspense>
       </main>
       <footer className="site-footer">
         <div className="container footer-inner">

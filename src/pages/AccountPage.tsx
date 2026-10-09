@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 import {
   ArrowRight,
   BookMarked,
@@ -17,11 +23,13 @@ import {
   getMyReadingList,
   getMyReservations,
   returnBook,
+  removeReadingItem,
 } from "../lib/library";
 import { coverUrl } from "../lib/openLibrary";
 import type { Loan, ReadingListItem, Reservation } from "../types";
 
 type Tab = "loans" | "reservations" | "reading";
+const tabs: Tab[] = ["loans", "reservations", "reading"];
 
 const formatDate = (date: string) =>
   new Intl.DateTimeFormat("es", {
@@ -33,6 +41,7 @@ const formatDate = (date: string) =>
 function AccountPage() {
   const { session, isLoading, signOut } = useAuth();
   const [tab, setTab] = useState<Tab>("loans");
+  const tabButtons = useRef<Partial<Record<Tab, HTMLButtonElement | null>>>({});
   const [loans, setLoans] = useState<Loan[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [reading, setReading] = useState<ReadingListItem[]>([]);
@@ -90,22 +99,46 @@ function AccountPage() {
     [reservations],
   );
 
+  const navigateTabs = (
+    event: KeyboardEvent<HTMLButtonElement>,
+    current: Tab,
+  ) => {
+    const index = tabs.indexOf(current);
+    const next =
+      event.key === "ArrowRight"
+        ? tabs[(index + 1) % tabs.length]
+        : event.key === "ArrowLeft"
+          ? tabs[(index + tabs.length - 1) % tabs.length]
+          : event.key === "Home"
+            ? tabs[0]
+            : event.key === "End"
+              ? tabs[tabs.length - 1]
+              : null;
+    if (!next) return;
+    event.preventDefault();
+    setTab(next);
+    tabButtons.current[next]?.focus();
+  };
+
   if (isLoading)
     return <div className="container page-status">Verificando sesión…</div>;
   if (!session) return <Navigate to="/acceso" replace />;
 
-  const perform = async (kind: "return" | "cancel", id: string) => {
+  const perform = async (kind: "return" | "cancel" | "remove", id: string) => {
     setError("");
     setMessage("");
     setPendingId(id);
     try {
       if (kind === "return") await returnBook(id);
-      else await cancelReservation(id);
+      else if (kind === "cancel") await cancelReservation(id);
+      else await removeReadingItem(id);
       await refresh();
       setMessage(
         kind === "return"
           ? "Devolución registrada correctamente."
-          : "Reserva cancelada correctamente.",
+          : kind === "cancel"
+            ? "Reserva cancelada correctamente."
+            : "Libro eliminado de tu lista.",
       );
     } catch (cause) {
       setError(
@@ -188,6 +221,11 @@ function AccountPage() {
         >
           <button
             id="tab-loans"
+            ref={(button) => {
+              tabButtons.current.loans = button;
+            }}
+            tabIndex={tab === "loans" ? 0 : -1}
+            onKeyDown={(event) => navigateTabs(event, "loans")}
             role="tab"
             aria-selected={tab === "loans"}
             aria-controls="panel-account"
@@ -199,6 +237,11 @@ function AccountPage() {
           </button>
           <button
             id="tab-reservations"
+            ref={(button) => {
+              tabButtons.current.reservations = button;
+            }}
+            tabIndex={tab === "reservations" ? 0 : -1}
+            onKeyDown={(event) => navigateTabs(event, "reservations")}
             role="tab"
             aria-selected={tab === "reservations"}
             aria-controls="panel-account"
@@ -210,6 +253,11 @@ function AccountPage() {
           </button>
           <button
             id="tab-reading"
+            ref={(button) => {
+              tabButtons.current.reading = button;
+            }}
+            tabIndex={tab === "reading" ? 0 : -1}
+            onKeyDown={(event) => navigateTabs(event, "reading")}
             role="tab"
             aria-selected={tab === "reading"}
             aria-controls="panel-account"
@@ -223,11 +271,12 @@ function AccountPage() {
         <div
           id="panel-account"
           role="tabpanel"
+          tabIndex={0}
           aria-labelledby={`tab-${tab}`}
           className="account-panel"
         >
           {loading ? (
-            <p>Cargando tus datos…</p>
+            <p role="status">Cargando tus datos…</p>
           ) : tab === "loans" ? (
             loans.length ? (
               <div className="account-list">
@@ -254,7 +303,7 @@ function AccountPage() {
                       !loan.returned_at && (
                         <button
                           type="button"
-                          disabled={pendingId === loan.id}
+                          disabled={Boolean(pendingId)}
                           onClick={() => void perform("return", loan.id)}
                         >
                           <CheckCircle2 size={16} />{" "}
@@ -297,7 +346,7 @@ function AccountPage() {
                       reservation.status === "waiting" && (
                         <button
                           type="button"
-                          disabled={pendingId === reservation.id}
+                          disabled={Boolean(pendingId)}
                           onClick={() => void perform("cancel", reservation.id)}
                         >
                           <XCircle size={16} />{" "}
@@ -333,6 +382,18 @@ function AccountPage() {
                     </>
                   }
                   badge={formatDate(item.updated_at)}
+                  action={
+                    <button
+                      type="button"
+                      disabled={Boolean(pendingId)}
+                      onClick={() => void perform("remove", item.work_id)}
+                    >
+                      <XCircle size={16} />{" "}
+                      {pendingId === item.work_id
+                        ? "Procesando…"
+                        : "Quitar de mi lista"}
+                    </button>
+                  }
                 />
               ))}
             </div>

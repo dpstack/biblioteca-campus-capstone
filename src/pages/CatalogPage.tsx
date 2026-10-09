@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { BookCard } from "../components/BookCard";
-import { getInventory } from "../lib/library";
 import { searchBooks } from "../lib/openLibrary";
 import type { Book, InventoryItem } from "../types";
 
@@ -40,30 +39,38 @@ function CatalogContent() {
   )
     ? (params.get("category") ?? "")
     : "";
-  const page = Math.min(
-    1000,
-    Math.max(1, Math.floor(Number(params.get("page")) || 1)),
-  );
+  const requestedPage = Number(params.get("page"));
+  const page =
+    Number.isSafeInteger(requestedPage) && requestedPage > 0
+      ? requestedPage
+      : 1;
+  const requestedSort = params.get("sort");
+  const sort: SortOrder =
+    requestedSort === "newest" ||
+    requestedSort === "oldest" ||
+    requestedSort === "author" ||
+    requestedSort === "popularity"
+      ? requestedSort
+      : "relevance";
   const [draft, setDraft] = useState(term);
   const [books, setBooks] = useState<Book[]>([]);
   const [total, setTotal] = useState(0);
   const [inventory, setInventory] = useState<Record<string, InventoryItem>>({});
-  const [sort, setSort] = useState<SortOrder>("relevance");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [inventoryError, setInventoryError] = useState("");
   const [retry, setRetry] = useState(0);
 
-  // implement useReduce, demasiados props
-
   useEffect(() => {
     const controller = new AbortController();
-    searchBooks({ term, field, category, page }, controller.signal)
+    searchBooks({ term, field, category, page, sort }, controller.signal)
       .then(async (result) => {
         if (controller.signal.aborted) return;
         setBooks(result.books);
         setTotal(result.total);
+        setLoading(false);
         try {
+          const { getInventory } = await import("../lib/library");
           const stock = await getInventory(result.books.map((book) => book.id));
           if (!controller.signal.aborted)
             setInventory(
@@ -92,26 +99,7 @@ function CatalogContent() {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [term, field, category, page, retry]);
-
-  const displayedBooks = useMemo(() => {
-    const sorted = [...books];
-    if (sort === "newest")
-      sorted.sort(
-        (a, b) => (b.firstPublishYear ?? 0) - (a.firstPublishYear ?? 0),
-      );
-    if (sort === "oldest")
-      sorted.sort(
-        (a, b) => (a.firstPublishYear ?? 9999) - (b.firstPublishYear ?? 9999),
-      );
-    if (sort === "author")
-      sorted.sort((a, b) =>
-        (a.authors[0] ?? "").localeCompare(b.authors[0] ?? "", "es"),
-      );
-    if (sort === "popularity")
-      sorted.sort((a, b) => b.editionCount - a.editionCount);
-    return sorted;
-  }, [books, sort]);
+  }, [term, field, category, page, sort, retry]);
 
   const updateParams = (changes: Record<string, string>) => {
     const next = new URLSearchParams(params);
@@ -215,20 +203,28 @@ function CatalogContent() {
               <span>Ordenar:</span>
               <select
                 value={sort}
-                onChange={(event) => setSort(event.target.value as SortOrder)}
+                onChange={(event) =>
+                  updateParams({
+                    sort:
+                      event.target.value === "relevance"
+                        ? ""
+                        : event.target.value,
+                    page: "",
+                  })
+                }
               >
                 <option value="relevance">Relevancia</option>
                 <option value="newest">Más recientes</option>
                 <option value="oldest">Más antiguos</option>
-                <option value="author">Autor A–Z</option>
-                <option value="popularity">Más ediciones</option>
+                <option value="author">Autor A–Z (hasta 200 obras)</option>
+                <option value="popularity">Más populares</option>
               </select>
             </label>
           </div>
-          {sort !== "relevance" && (
+          {sort === "author" && (
             <p className="sort-explainer">
-              El orden se aplica a los resultados de esta página; “más
-              ediciones” es una aproximación a popularidad.
+              Autor A–Z ordena toda la búsqueda cuando hay 200 obras o menos.
+              Para búsquedas mayores, afina los filtros o elige otro orden.
             </p>
           )}
           {error && (
@@ -283,7 +279,7 @@ function CatalogContent() {
           {!loading && !error && books.length > 0 && (
             <>
               <div className="book-grid">
-                {displayedBooks.map((book) => (
+                {books.map((book) => (
                   <BookCard
                     key={book.id}
                     book={book}

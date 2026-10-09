@@ -11,21 +11,11 @@ import {
 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "../context/auth-context";
-import {
-  borrowBook,
-  getInventory,
-  reserveBook,
-  setReadingStatus,
-} from "../lib/library";
+import { borrowBook, getInventory, reserveBook } from "../lib/library";
+import { ReadingControl } from "../components/ReadingControl";
 import { coverUrl, getWork } from "../lib/openLibrary";
 import { isSupabaseConfigured } from "../lib/supabase";
-import type { InventoryItem, ReadingStatus, WorkDetail } from "../types";
-
-const readingOptions: Array<{ value: ReadingStatus; label: string }> = [
-  { value: "want_to_read", label: "Quiero leer" },
-  { value: "reading", label: "Leyendo" },
-  { value: "finished", label: "Terminado" },
-];
+import type { InventoryItem, WorkDetail } from "../types";
 
 export function BookPage() {
   const { workId = "" } = useParams();
@@ -77,7 +67,7 @@ function BookDetail({ workId }: { workId: string }) {
     return () => controller.abort();
   }, [workId]);
 
-  const act = async (action: "borrow" | "reserve" | ReadingStatus) => {
+  const act = async (action: "borrow" | "reserve") => {
     if (!book) return;
     setActionPending(true);
     setMessage("");
@@ -97,9 +87,6 @@ function BookDetail({ workId }: { workId: string }) {
       } else if (action === "reserve") {
         await reserveBook(snapshot);
         setMessage("Reserva registrada. Tu turno aparecerá en Mi biblioteca.");
-      } else {
-        await setReadingStatus(snapshot, action);
-        setMessage("Tu lista de lectura se actualizó correctamente.");
       }
       const records = await getInventory([book.id]);
       setInventory(records[0] ?? null);
@@ -116,7 +103,9 @@ function BookDetail({ workId }: { workId: string }) {
 
   if (loading)
     return (
-      <div className="container page-status">Cargando detalles de la obra…</div>
+      <div className="container page-status" role="status">
+        Cargando detalles de la obra…
+      </div>
     );
   if (error || !book)
     return (
@@ -283,29 +272,15 @@ function BookDetail({ workId }: { workId: string }) {
             </Link>
           )}
           {session && (
-            <div className="reading-control">
-              <label htmlFor="reading-status">
-                Guardar en mi lista de lectura
-              </label>
-              <select
-                id="reading-status"
-                defaultValue=""
-                disabled={actionPending}
-                onChange={(event) => {
-                  if (event.target.value)
-                    void act(event.target.value as ReadingStatus);
-                }}
-              >
-                <option value="" disabled>
-                  Seleccionar estado
-                </option>
-                {readingOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <ReadingControl
+              key={`${session.user.id}:${book.id}`}
+              book={{
+                work_id: book.id,
+                title: book.title,
+                author: book.authors.join(", ") || "Autor no indicado",
+                cover_id: book.coverId,
+              }}
+            />
           )}
           {message && (
             <p className="action-feedback success" role="status">

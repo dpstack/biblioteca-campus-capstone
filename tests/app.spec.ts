@@ -87,6 +87,14 @@ test("las páginas públicas no presentan violaciones WCAG A/AA detectables", as
       ),
     );
     expect(summary, `Violaciones en ${path}`).toEqual([]);
+    const dimensions = await page.evaluate(() => ({
+      width: document.documentElement.clientWidth,
+      scroll: document.documentElement.scrollWidth,
+    }));
+    expect(
+      dimensions.scroll,
+      `Desbordamiento horizontal en ${path}`,
+    ).toBeLessThanOrEqual(dimensions.width);
   }
 });
 
@@ -139,4 +147,111 @@ test("inventario conectado y ruta personal protegida", async ({ page }) => {
   await page.goto("/mi-biblioteca");
   await expect(page).toHaveURL(/\/acceso$/);
   await expect(page.getByLabel("Correo electrónico")).toBeVisible();
+});
+
+test("el teclado salta al contenido, navega y cierra el menú con Escape", async ({
+  page,
+}, info) => {
+  await page.goto("/");
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("link", { name: "Saltar al contenido" }),
+  ).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("main")).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByLabel("Buscar libros, autores o temas")).toBeFocused();
+  await page.keyboard.type("Tolkien");
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/catalogo\?q=Tolkien/);
+  await expect(page.locator("main")).toBeFocused();
+  if (info.project.name === "mobile") {
+    await page.getByRole("button", { name: "Abrir menú" }).focus();
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Tab");
+    await expect(
+      page
+        .getByRole("navigation")
+        .getByRole("link", { name: "Inicio", exact: true }),
+    ).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(
+      page.getByRole("button", { name: "Abrir menú" }),
+    ).toBeFocused();
+    await expect(
+      page.getByRole("button", { name: "Abrir menú" }),
+    ).toHaveAttribute("aria-expanded", "false");
+  }
+});
+
+test("autor ordena una búsqueda completa entre páginas y pide afinar resultados amplios", async ({
+  page,
+}) => {
+  const authors = Array.from({ length: 30 }, (_, index) => ({
+    key: `/works/OL${900 + index}W`,
+    title: `Obra ${index}`,
+    author_name: [index < 6 ? "Zora" : "Ana"],
+  }));
+  let requests = 0;
+  await page.route("https://openlibrary.org/search.json?**", async (route) => {
+    const url = new URL(route.request().url());
+    requests++;
+    await route.fulfill({
+      json: {
+        numFound: url.searchParams.get("q") === "amplia" ? 201 : 30,
+        docs: authors,
+      },
+    });
+  });
+  await page.goto("/catalogo?q=acotada&sort=author");
+  await expect(page.locator(".book-grid article")).toHaveCount(24);
+  expect(await page.locator(".book-grid article p").allTextContents()).toEqual(
+    Array(24).fill("Ana"),
+  );
+  const initialRequests = requests;
+  await page.getByRole("button", { name: "Siguiente" }).click();
+  await expect(page.locator(".book-grid article")).toHaveCount(6);
+  expect(await page.locator(".book-grid article p").allTextContents()).toEqual(
+    Array(6).fill("Zora"),
+  );
+  expect(requests).toBe(initialRequests);
+  await page.goto("/catalogo?q=amplia&sort=author");
+  await expect(page.getByRole("alert")).toContainText("200 obras o menos");
+  await expect(page.locator(".book-grid article")).toHaveCount(0);
+});
+
+test("orden por autor funciona con una búsqueda real de Open Library", async ({
+  page,
+}, info) => {
+  const response = page.waitForResponse(
+    (response) =>
+      response.url().includes("/search.json") &&
+      new URL(response.url()).searchParams.get("limit") === "200",
+  );
+  await page.goto(
+    "/catalogo?q=A%20Wizard%20of%20Earthsea&field=title&sort=author",
+  );
+  expect((await response).status()).toBe(200);
+  await expect(page.locator(".book-grid article").first()).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Ordenar:" })).toHaveValue(
+    "author",
+  );
+  const names = await page.locator(".book-grid article p").allTextContents();
+  expect(names.length).toBeGreaterThan(0);
+  const firstAuthors = names.map((value) => value.split(",")[0]);
+  const knownAuthors = firstAuthors.filter(
+    (name) => name !== "Autor no indicado",
+  );
+  expect(firstAuthors).toEqual(
+    [...knownAuthors]
+      .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }))
+      .concat(firstAuthors.filter((name) => name === "Autor no indicado")),
+  );
+  if (info.project.name === "desktop")
+    await page.screenshot({
+      path: "docs/screenshots/author-production-desktop.png",
+    });
 });

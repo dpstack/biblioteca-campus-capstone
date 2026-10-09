@@ -13,6 +13,10 @@ dist-ssr
 *.local
 test-results
 playwright-report
+performance-results
+coverage
+.vercel
+tmp/
 
 # Local and production credentials; only the template belongs in Git.
 .env
