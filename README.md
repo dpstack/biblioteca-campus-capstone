@@ -137,3 +137,7 @@ Antes de un uso institucional: cargar inventario real, decidir políticas de pr�
 ## Tema claro y oscuro
 
 El botón de sol/luna de la cabecera alterna el tema en todas las páginas, incluida Administración. Inicialmente sigue la preferencia del sistema operativo; al elegir un tema guarda `light` o `dark` en `biblioteca-theme-v1` de localStorage y lo conserva al recargar y navegar. La preferencia pertenece al navegador, no a la cuenta. Se sincroniza entre pestañas. Si el almacenamiento está bloqueado, el control funciona durante la visita. Un script pequeño aplica el tema antes del contenido; `color-scheme` adapta los controles nativos.
+
+## Tipografía
+
+DM Sans se usa para texto y controles; Playfair Display para encabezados y títulos de tarjetas, mediante la variable compartida `--font-heading`. Los metadatos y etiquetas de contenido tienen al menos 12 px; autores y enlaces de tarjetas usan 13 px. El descriptor compacto de la marca conserva 10 px. Los títulos de tarjetas usan interlineado de 1,3 para facilitar la lectura en varias líneas. La misma jerarquía se aplica en ambos temas.
