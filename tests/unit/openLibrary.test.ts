@@ -2,6 +2,51 @@ import { searchBooks, getWork } from "../../src/lib/openLibrary";
 beforeEach(() => {
   global.fetch = jest.fn();
 });
+
+test("restringe obras en el servidor antes de paginar y conserva título, categoría y orden", async () => {
+  (fetch as jest.Mock).mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      numFound: 30,
+      docs: [{ key: "/works/OL30W", title: "Prestables" }],
+    }),
+  });
+  const ids = Array.from({ length: 30 }, (_, i) => `OL${i + 1}W`);
+  const result = await searchBooks({
+    workIds: ids,
+    term: "Campus",
+    field: "title",
+    category: "science",
+    sort: "newest",
+    page: 2,
+  });
+  const url = (fetch as jest.Mock).mock.calls[0][0];
+  expect(url.searchParams.get("q")).toContain('"/works/OL30W"');
+  expect(url.searchParams.get("q")).toContain('"/works/OL1W"');
+  expect(url.searchParams.get("title")).toBe("Campus");
+  expect(url.searchParams.get("subject")).toBe("science");
+  expect(url.searchParams.get("sort")).toBe("new");
+  expect(url.searchParams.get("page")).toBe("2");
+  expect(result.total).toBe(30);
+});
+
+test("sin ejemplares disponibles no consulta Open Library", async () => {
+  expect(await searchBooks({ workIds: [] })).toEqual({ books: [], total: 0 });
+  expect(fetch).not.toHaveBeenCalled();
+});
+
+test("el inventario forma parte de la caché de orden por autor", async () => {
+  (fetch as jest.Mock).mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      numFound: 1,
+      docs: [{ key: "/works/OL1W", title: "Campus" }],
+    }),
+  });
+  await searchBooks({ term: "stock-cache", sort: "author", workIds: ["OL1W"] });
+  await searchBooks({ term: "stock-cache", sort: "author", workIds: ["OL2W"] });
+  expect(fetch).toHaveBeenCalledTimes(2);
+});
 test("normaliza resultados y descarta obras inválidas usando fetch simulado", async () => {
   (fetch as jest.Mock).mockResolvedValue({
     ok: true,

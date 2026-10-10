@@ -70,6 +70,7 @@ export const coverUrl = (coverId: number | null, size: "M" | "L" = "M") =>
     : null;
 
 export interface SearchOptions {
+  workIds?: string[];
   term?: string;
   field?: "keyword" | "title" | "author";
   category?: string;
@@ -90,9 +91,21 @@ export async function searchBooks(
       ? requestedPage
       : 1;
   const authorSort = options.sort === "author";
-  const cacheKey = JSON.stringify([term, options.field ?? "keyword", category]);
+  const workIds =
+    options.workIds === undefined
+      ? undefined
+      : [...new Set(options.workIds)]
+          .filter((id) => /^OL\d+W$/.test(id))
+          .sort();
+  const cacheKey = JSON.stringify([
+    term,
+    options.field ?? "keyword",
+    category,
+    workIds,
+  ]);
   if (signal?.aborted)
     throw new DOMException("Búsqueda cancelada", "AbortError");
+  if (workIds?.length === 0) return { books: [], total: 0 };
   const cached = authorSort ? authorSearchCache.get(cacheKey) : undefined;
   if (cached && Date.now() - cached.createdAt < 120_000) {
     return {
@@ -106,8 +119,19 @@ export async function searchBooks(
   else
     url.searchParams.set(
       "q",
-      term || (category ? `subject:${category}` : "subject:fiction"),
+      (workIds
+        ? term.replace(/([+\-!(){}[\]^"~*?:\\/]|&&|\|\|)/g, "\\$1")
+        : term) ||
+        (category ? `subject:${category}` : workIds ? "" : "subject:fiction"),
     );
+  if (workIds) {
+    const restriction = `key:(${workIds.map((id) => `"/works/${id}"`).join(" OR ")})`;
+    const query = url.searchParams.get("q");
+    url.searchParams.set(
+      "q",
+      query ? `(${query}) AND ${restriction}` : restriction,
+    );
+  }
   if (category && term) url.searchParams.set("subject", category);
   url.searchParams.set(
     "fields",

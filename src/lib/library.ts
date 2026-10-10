@@ -30,6 +30,27 @@ export async function getInventory(
   return (data ?? []) as InventoryItem[];
 }
 
+export async function getAvailableInventory(
+  signal?: AbortSignal,
+): Promise<InventoryItem[]> {
+  const stock: InventoryItem[] = [];
+  // Read every range: PostgREST caps individual responses, not the collection.
+  for (let offset = 0; ; offset += 500) {
+    const query = client()
+      .from("library_books")
+      .select("work_id,total_copies,available_copies,retired")
+      .eq("retired", false)
+      .gt("available_copies", 0)
+      .order("work_id")
+      .range(offset, offset + 499);
+    const { data, error } = await (signal ? query.abortSignal(signal) : query);
+    throwIfError(error);
+    const batch = (data ?? []) as InventoryItem[];
+    stock.push(...batch);
+    if (batch.length < 500) return stock;
+  }
+}
+
 export async function getMyLoans(): Promise<Loan[]> {
   const { data, error } = await client()
     .from("loans")

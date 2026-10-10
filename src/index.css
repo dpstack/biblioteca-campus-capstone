@@ -2250,3 +2250,24 @@ main {
     grid-column: 1 / -1;
   }
 }
+
+.availability-filter {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-top: 1.4rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+.availability-filter input {
+  accent-color: #245c40;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.availability-help {
+  font-size: 0.82rem;
+  color: #536558;
+  margin: 0.65rem 0 1.4rem;
+}

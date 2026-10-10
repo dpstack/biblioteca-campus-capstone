@@ -24,15 +24,17 @@ Jest y React Testing Library prueban los componentes `BookCard`, `SiteLayout` y 
 
 ## Estado actual
 
-**Actualización del capstone (9 de octubre de 2026):** lectura persistida; orden global por fecha, popularidad y autor con el alcance descrito abajo; teclado y foco de navegación; mobile-first; carga diferida de rutas y autenticación. Pasaron 50 pruebas Jest, 18 de navegador y comprobaciones reales de préstamos, reservas, lectura y RLS. Consulta [pruebas](docs/TESTING.md), [accesibilidad](docs/ACCESSIBILITY.md) y [rendimiento](docs/PERFORMANCE.md).
+**Actualización del capstone (9 de octubre de 2026):** lectura persistida; orden global por fecha, popularidad y autor con el alcance descrito abajo; teclado y foco de navegación; mobile-first; carga diferida de rutas y autenticación. Pasaron 56 pruebas Jest, 22 de navegador y comprobaciones reales de préstamos, reservas, lectura y RLS. Consulta [pruebas](docs/TESTING.md), [accesibilidad](docs/ACCESSIBILITY.md) y [rendimiento](docs/PERFORMANCE.md).
 
-- Catálogo público con búsqueda por palabra clave, título o autor; categorías, ordenamiento y paginación.
+- Catálogo público con búsqueda por palabra clave, título o autor; categorías, ordenamiento y paginación. El filtro **Disponibles para préstamo** muestra únicamente obras activas de la colección con ejemplares disponibles.
 - Fichas de obras, portadas, descripción, autores y temas.
 - Diseño responsivo, navegación SPA y ruta de Mi biblioteca con carga diferida.
 - Registro e inicio de sesión con Supabase Auth.
 - Inventario institucional separado del catálogo externo, préstamos de 14 días, reservas, devoluciones, historial y estados de lectura. Las operaciones de inventario usan funciones SQL transaccionales y políticas RLS.
 
 **Configuración:** cada instalación necesita su propio `.env.local` con la URL y la clave publicable de Supabase. El archivo local está excluido de Git. La migración incluida crea tres obras de ejemplo; no representa existencias institucionales reales.
+
+**Filtro de préstamo:** en Explorar catálogo, marca Disponibles para préstamo. Se combina con búsqueda, categoría y orden; al activarlo o desactivarlo vuelve a la primera página. La URL conserva el filtro (`available=1`) para compartirlo. No requiere iniciar sesión para explorar; solicitar un préstamo sí requiere una cuenta. La disponibilidad se consulta nuevamente al cargar cada página y el backend valida el stock al prestar.
 
 **Alcance del catálogo:** Autor A–Z ordena todos los resultados de búsquedas de hasta 200 obras antes de paginar. Si hay más, pide afinar la búsqueda; nunca presenta un orden parcial como global. Es el alcance elegido para mantener Open Library. La colección de demostración contiene tres obras. Las notificaciones de disponibilidad son una función opcional pendiente.
 

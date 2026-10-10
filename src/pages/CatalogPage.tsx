@@ -30,6 +30,7 @@ export function CatalogPage() {
 function CatalogContent() {
   const [params, setParams] = useSearchParams();
   const term = params.get("q") ?? "";
+  const availableOnly = params.get("available") === "1";
   const field =
     params.get("field") === "title" || params.get("field") === "author"
       ? (params.get("field") as "title" | "author")
@@ -63,12 +64,38 @@ function CatalogContent() {
 
   useEffect(() => {
     const controller = new AbortController();
-    searchBooks({ term, field, category, page, sort }, controller.signal)
+    const load = async () => {
+      if (!availableOnly)
+        return searchBooks(
+          { term, field, category, page, sort },
+          controller.signal,
+        );
+      const { getAvailableInventory } = await import("../lib/library");
+      const stock = await getAvailableInventory(controller.signal);
+      if (controller.signal.aborted)
+        throw new DOMException("Búsqueda cancelada", "AbortError");
+      setInventory(
+        Object.fromEntries(stock.map((item) => [item.work_id, item])),
+      );
+      return searchBooks(
+        {
+          term,
+          field,
+          category,
+          page,
+          sort,
+          workIds: stock.map((item) => item.work_id),
+        },
+        controller.signal,
+      );
+    };
+    load()
       .then(async (result) => {
         if (controller.signal.aborted) return;
         setBooks(result.books);
         setTotal(result.total);
         setLoading(false);
+        if (availableOnly) return;
         try {
           const { getInventory } = await import("../lib/library");
           const stock = await getInventory(result.books.map((book) => book.id));
@@ -99,7 +126,7 @@ function CatalogContent() {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [term, field, category, page, sort, retry]);
+  }, [term, field, category, page, sort, retry, availableOnly]);
 
   const updateParams = (changes: Record<string, string>) => {
     const next = new URLSearchParams(params);
@@ -132,6 +159,22 @@ function CatalogContent() {
             <ListFilter size={19} />
             <h2>Filtrar por</h2>
           </div>
+          <label className="availability-filter">
+            <input
+              type="checkbox"
+              checked={availableOnly}
+              onChange={(event) =>
+                updateParams({
+                  available: event.target.checked ? "1" : "",
+                  page: "",
+                })
+              }
+            />
+            <span>Disponibles para préstamo</span>
+          </label>
+          <p className="availability-help">
+            Obras de la biblioteca con ejemplares disponibles.
+          </p>
           <h3>Categoría</h3>
           <div className="category-list">
             {categories.map((item) => (
@@ -265,7 +308,9 @@ function CatalogContent() {
               <BookOpenIcon />
               <h3>Sin resultados por ahora</h3>
               <p>
-                Prueba otra palabra clave o selecciona una categoría diferente.
+                {availableOnly
+                  ? "No hay obras disponibles que coincidan. Cambia la búsqueda o desactiva el filtro de préstamo."
+                  : "Prueba otra palabra clave o selecciona una categoría diferente."}
               </p>
               <button
                 className="button button-primary"

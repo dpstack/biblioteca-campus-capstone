@@ -8,6 +8,7 @@ import {
   getReadingStatus,
   setReadingStatus,
   removeReadingItem,
+  getAvailableInventory,
 } from "../../src/lib/library";
 jest.mock("../../src/lib/supabase", () => {
   const { createClient } = require("@supabase/supabase-js");
@@ -33,6 +34,28 @@ const response = (data: unknown, status = 200) =>
     status,
     headers: { "Content-Type": "application/json" },
   });
+
+test("consulta solo inventario activo con stock y lee todos los rangos del servidor", async () => {
+  const batch = Array.from({ length: 500 }, (_, i) => ({
+    work_id: `OL${i + 1}W`,
+    total_copies: 1,
+    available_copies: 1,
+    retired: false,
+  }));
+  (fetch as jest.Mock)
+    .mockResolvedValueOnce(response(batch))
+    .mockResolvedValueOnce(response([{ ...batch[0], work_id: "OL501W" }]));
+  const result = await getAvailableInventory();
+  expect(result).toHaveLength(501);
+  const calls = (fetch as jest.Mock).mock.calls;
+  calls.forEach(([input]) => {
+    const url = new URL(input);
+    expect(url.searchParams.get("retired")).toBe("eq.false");
+    expect(url.searchParams.get("available_copies")).toBe("gt.0");
+    expect(url.searchParams.get("order")).toBe("work_id.asc");
+  });
+  expect(new URL(calls[1][0]).searchParams.get("offset")).toBe("500");
+});
 beforeEach(async () => {
   global.fetch = jest.fn(async (input) =>
     String(input).includes("/auth/v1/token")
