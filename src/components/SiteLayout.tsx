@@ -12,6 +12,7 @@ import {
 import { useAuth } from "../context/auth-context";
 import { isSupabaseConfigured } from "../lib/config";
 import { AdminLink } from "./AdminLink";
+import { ThemeToggle } from "./ThemeToggle";
 
 const navLinks = [
   { to: "/", label: "Inicio", end: true },
@@ -98,6 +99,7 @@ export function SiteLayout() {
               <UserRound size={17} /> {session ? "Mi cuenta" : "Iniciar sesión"}
             </Link>
           </nav>
+          <ThemeToggle />
         </div>
       </header>
       {!isSupabaseConfigured && (

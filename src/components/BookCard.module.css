@@ -1,7 +1,7 @@
 .card {
   min-width: 0;
-  background: #fff;
-  border: 1px solid #e7e7e1;
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #e7e7e1);
   border-radius: 13px;
   overflow: hidden;
   transition:
@@ -20,8 +20,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #e9eee9;
-  color: #8aa197;
+  background: var(--surface-subtle, #e9eee9);
+  color: var(--text-muted, #8aa197);
   position: relative;
   overflow: hidden;
 }
@@ -38,21 +38,21 @@
   left: 12px;
   padding: 6px 10px;
   border-radius: 20px;
-  background: #fff4e8;
-  color: #9b602b;
+  background: var(--surface, #fff4e8);
+  color: var(--text-warning, #9b602b);
   font-size: 11px;
   font-weight: 700;
   box-shadow: 0 2px 8px #0001;
 }
 .available {
-  background: #e6f5e6;
-  color: #247546;
+  background: var(--surface, #e6f5e6);
+  color: var(--text-accent, #247546);
 }
 .content {
   padding: 17px 18px 18px;
 }
 .eyebrow {
-  color: #596b60;
+  color: var(--text-muted, #596b60);
   text-transform: uppercase;
   font-size: 10px;
   font-weight: 700;
@@ -66,14 +66,14 @@
   min-height: 46px;
 }
 .content h3 a {
-  color: #1f3b35;
+  color: var(--text-accent, #1f3b35);
   text-decoration: none;
 }
 .content h3 a:hover {
   text-decoration: underline;
 }
 .content p {
-  color: #596b60;
+  color: var(--text-muted, #596b60);
   font-size: 12px;
   margin: 0 0 15px;
   overflow: hidden;
@@ -84,7 +84,7 @@
   display: inline-flex;
   gap: 5px;
   align-items: center;
-  color: #2d7156;
+  color: var(--text-accent, #2d7156);
   font-size: 12px;
   font-weight: 700;
   text-decoration: none;

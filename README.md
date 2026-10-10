@@ -24,11 +24,11 @@ Jest y React Testing Library prueban los componentes `BookCard`, `SiteLayout` y 
 
 ## Estado actual
 
-**Actualización del capstone (9 de octubre de 2026):** lectura persistida; orden global por fecha, popularidad y autor con el alcance descrito abajo; teclado y foco de navegación; mobile-first; carga diferida de rutas y autenticación. Pasaron 56 pruebas Jest, 22 de navegador y comprobaciones reales de préstamos, reservas, lectura y RLS. Consulta [pruebas](docs/TESTING.md), [accesibilidad](docs/ACCESSIBILITY.md) y [rendimiento](docs/PERFORMANCE.md).
+**Actualización del capstone (9 de octubre de 2026):** lectura persistida; orden global por fecha, popularidad y autor con el alcance descrito abajo; teclado y foco de navegación; mobile-first; carga diferida de rutas y autenticación. Pasaron 60 pruebas Jest, 26 de navegador y comprobaciones reales de préstamos, reservas, lectura y RLS. Consulta [pruebas](docs/TESTING.md), [accesibilidad](docs/ACCESSIBILITY.md) y [rendimiento](docs/PERFORMANCE.md).
 
 - Catálogo público con búsqueda por palabra clave, título o autor; categorías, ordenamiento y paginación. El filtro **Disponibles para préstamo** muestra únicamente obras activas de la colección con ejemplares disponibles.
 - Fichas de obras, portadas, descripción, autores y temas.
-- Diseño responsivo, navegación SPA y ruta de Mi biblioteca con carga diferida.
+- Diseño responsivo, navegación SPA y ruta de Mi biblioteca con carga diferida. Tema claro y oscuro con control de sol/luna en la cabecera.
 - Registro e inicio de sesión con Supabase Auth.
 - Inventario institucional separado del catálogo externo, préstamos de 14 días, reservas, devoluciones, historial y estados de lectura. Las operaciones de inventario usan funciones SQL transaccionales y políticas RLS.
 
@@ -133,3 +133,7 @@ Antes de un uso institucional: cargar inventario real, decidir políticas de pr�
 - [Open Library Works API](https://openlibrary.org/dev/docs/api/books)
 - [Supabase Auth para React](https://supabase.com/docs/guides/auth/quickstarts/react)
 - [Supabase Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security)
+
+## Tema claro y oscuro
+
+El botón de sol/luna de la cabecera alterna el tema en todas las páginas, incluida Administración. Inicialmente sigue la preferencia del sistema operativo; al elegir un tema guarda `light` o `dark` en `biblioteca-theme-v1` de localStorage y lo conserva al recargar y navegar. La preferencia pertenece al navegador, no a la cuenta. Se sincroniza entre pestañas. Si el almacenamiento está bloqueado, el control funciona durante la visita. Un script pequeño aplica el tema antes del contenido; `color-scheme` adapta los controles nativos.

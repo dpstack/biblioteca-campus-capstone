@@ -125,6 +125,10 @@ test("administración: añadir, editar, retirar y consultar circulación (API si
   await expect(page.getByText("3 disponibles de 3 · Retirada")).toBeVisible();
   await expect(page.getByText("reader@example.invalid")).toBeVisible();
   await expect(page.getByText(/next@example.invalid · Turno 1/)).toBeVisible();
+  await page.getByRole("button", { name: "Tema oscuro" }).click();
+  await expect(
+    page.getByRole("button", { name: "Tema oscuro" }),
+  ).toHaveAttribute("aria-pressed", "true");
   expect(
     (
       await new AxeBuilder({ page })
@@ -138,9 +142,23 @@ test("administración: añadir, editar, retirar y consultar circulación (API si
     ),
   ).toBe(true);
   await page.screenshot({
-    path: `docs/screenshots/admin-fixture-${info.project.name}.png`,
+    path: `docs/screenshots/admin-dark-fixture-${info.project.name}.png`,
     fullPage: true,
   });
+  await page.goto("/mi-biblioteca");
+  await expect(
+    page.getByRole("heading", { name: "Mi biblioteca" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Tema oscuro" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  expect(
+    (
+      await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+        .analyze()
+    ).violations,
+  ).toEqual([]);
 });
 test("administración: sesión normal no recibe datos ni editor (API simulada)", async ({
   page,
