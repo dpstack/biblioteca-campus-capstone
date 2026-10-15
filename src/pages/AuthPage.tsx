@@ -14,7 +14,7 @@ export function AuthPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  if (!isLoading && session) return <Navigate to="/mi-biblioteca" replace />;
+  if (!isLoading && session) return <Navigate to="/my-library" replace />;
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -22,7 +22,7 @@ export function AuthPage() {
     setError("");
     setMessage("");
     if (password.length < 8) {
-      setError("La contraseña debe tener al menos 8 caracteres.");
+      setError("Your password must contain at least 8 characters.");
       return;
     }
     setPending(true);
@@ -33,10 +33,10 @@ export function AuthPage() {
           password,
         });
         if (authError) throw authError;
-        if (data.session) navigate("/mi-biblioteca");
+        if (data.session) navigate("/my-library");
         else
           setMessage(
-            "Cuenta creada. Revisa tu correo para confirmar la dirección e iniciar sesión.",
+            "Account created. Check your email to confirm your address and sign in.",
           );
       } else {
         const { error: authError } = await supabase.auth.signInWithPassword({
@@ -44,13 +44,13 @@ export function AuthPage() {
           password,
         });
         if (authError) throw authError;
-        navigate("/mi-biblioteca");
+        navigate("/my-library");
       }
     } catch (cause) {
       setError(
         cause instanceof Error
           ? cause.message
-          : "No fue posible acceder. Intenta nuevamente.",
+          : "Could not sign in. Please try again.",
       );
     } finally {
       setPending(false);
@@ -61,18 +61,18 @@ export function AuthPage() {
     <div className="auth-page">
       <div className="container auth-grid">
         <div className="auth-story">
-          <span className="eyebrow light">TU ESPACIO DE LECTURA</span>
-          <h1>El conocimiento se disfruta más cuando es tuyo.</h1>
+          <span className="eyebrow light">YOUR READING SPACE</span>
+          <h1>Make knowledge your own.</h1>
           <p>
-            Crea una cuenta para seguir tus lecturas, solicitar préstamos y
-            reservar los libros que te esperan.
+            Create an account to track your reading, borrow books, and reserve
+            your next read.
           </p>
           <div className="auth-points">
             <span>
-              <ShieldCheck size={18} /> Tu información, protegida
+              <ShieldCheck size={18} /> Your information, protected
             </span>
             <span>
-              <BookIcon /> Tus libros, en un solo lugar
+              <BookIcon /> Your books, all in one place
             </span>
           </div>
         </div>
@@ -80,29 +80,28 @@ export function AuthPage() {
           <span className="auth-icon">
             <LockKeyhole size={22} />
           </span>
-          <h2>
-            {mode === "signin" ? "Bienvenido de nuevo" : "Crea tu cuenta"}
-          </h2>
+          <h2>{mode === "signin" ? "Welcome back" : "Create your account"}</h2>
           <p>
             {mode === "signin"
-              ? "Ingresa para continuar con tu biblioteca."
-              : "Empieza a organizar tu próxima lectura."}
+              ? "Sign in to continue to your library."
+              : "Start organizing your next read."}
           </p>
           {!isSupabaseConfigured ? (
             <div className="inline-message">
-              <strong>Falta conectar Supabase.</strong>
+              <strong>Supabase is not connected.</strong>
               <p>
-                Primero crea un proyecto Supabase y configura las variables de{" "}
-                <code>.env.local</code>. La guía está en el README del proyecto.
+                First create a Supabase project and configure the variables in{" "}
+                <code>.env.local</code>. See the project README for setup
+                instructions.
               </p>
-              <Link to="/catalogo">
-                Mientras tanto, explora el catálogo <ArrowRight size={15} />
+              <Link to="/catalog">
+                Meanwhile, explore the catalog <ArrowRight size={15} />
               </Link>
             </div>
           ) : (
             <>
               <form onSubmit={(event) => void submit(event)}>
-                <label htmlFor="auth-email">Correo electrónico</label>
+                <label htmlFor="auth-email">Email address</label>
                 <div className="input-with-icon">
                   <Mail size={17} />
                   <input
@@ -112,10 +111,10 @@ export function AuthPage() {
                     onChange={(event) => setEmail(event.target.value)}
                     autoComplete="email"
                     required
-                    placeholder="tu@universidad.edu"
+                    placeholder="you@university.edu"
                   />
                 </div>
-                <label htmlFor="auth-password">Contraseña</label>
+                <label htmlFor="auth-password">Password</label>
                 <div className="input-with-icon">
                   <LockKeyhole size={17} />
                   <input
@@ -128,7 +127,7 @@ export function AuthPage() {
                     }
                     required
                     minLength={8}
-                    placeholder="Mínimo 8 caracteres"
+                    placeholder="At least 8 characters"
                   />
                 </div>
                 {error && (
@@ -147,17 +146,17 @@ export function AuthPage() {
                   disabled={pending}
                 >
                   {pending
-                    ? "Un momento…"
+                    ? "Please wait…"
                     : mode === "signin"
-                      ? "Iniciar sesión"
-                      : "Crear cuenta"}{" "}
+                      ? "Sign in"
+                      : "Create account"}{" "}
                   <ArrowRight size={17} />
                 </button>
               </form>
               <p className="auth-switch">
                 {mode === "signin"
-                  ? "¿Aún no tienes cuenta?"
-                  : "¿Ya tienes cuenta?"}{" "}
+                  ? "Don't have an account?"
+                  : "Already have an account?"}{" "}
                 <button
                   type="button"
                   onClick={() => {
@@ -166,7 +165,7 @@ export function AuthPage() {
                     setMessage("");
                   }}
                 >
-                  {mode === "signin" ? "Regístrate" : "Inicia sesión"}
+                  {mode === "signin" ? "Sign up" : "Sign in"}
                 </button>
               </p>
             </>

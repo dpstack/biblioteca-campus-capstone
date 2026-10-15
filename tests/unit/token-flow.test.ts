@@ -1,7 +1,7 @@
 /** @jest-environment node */
 import { createClient } from "@supabase/supabase-js";
 
-test("login almacena la sesión, REST envía Bearer y logout elimina los tokens", async () => {
+test("sign-in stores the session, REST sends Bearer, and sign-out removes tokens", async () => {
   const storage = new Map<string, string>();
   const request = jest.fn(async (input, options) => {
     const url = String(input);

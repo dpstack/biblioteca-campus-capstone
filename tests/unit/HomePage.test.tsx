@@ -13,43 +13,43 @@ const show = () =>
     </MemoryRouter>,
   );
 
-test("una respuesta vacía termina la carga y ofrece explorar el catálogo", async () => {
+test("an empty response stops loading and offers catalog exploration", async () => {
   (searchBooks as jest.Mock).mockResolvedValue({ books: [], total: 0 });
   show();
   expect(
-    await screen.findByText(/No hay destacados disponibles/),
+    await screen.findByText(/No featured books are available/),
   ).toBeInTheDocument();
   expect(
-    screen.queryByRole("status", { name: "Cargando libros destacados" }),
+    screen.queryByRole("status", { name: "Loading featured books" }),
   ).not.toBeInTheDocument();
   expect(
-    screen.getByRole("link", { name: "Explorar el catálogo" }),
-  ).toHaveAttribute("href", "/catalogo");
+    screen.getByRole("link", { name: "Explore the catalog" }),
+  ).toHaveAttribute("href", "/catalog");
 });
-test("un catálogo con obras sin portada también muestra el estado vacío", async () => {
+test("works without covers also show the empty state", async () => {
   (searchBooks as jest.Mock).mockResolvedValue({
-    books: [{ id: "OL1W", title: "Sin portada", coverId: null }],
+    books: [{ id: "OL1W", title: "No cover", coverId: null }],
     total: 1,
   });
   show();
-  await screen.findByText(/No hay destacados disponibles/);
+  await screen.findByText(/No featured books are available/);
   expect(
-    screen.queryByRole("status", { name: "Cargando libros destacados" }),
+    screen.queryByRole("status", { name: "Loading featured books" }),
   ).not.toBeInTheDocument();
 });
-test("un fallo de la API muestra un mensaje y permite continuar al catálogo", async () => {
+test("an API failure shows a message and allows continuing to the catalog", async () => {
   (searchBooks as jest.Mock).mockRejectedValue(
-    new Error("No se pudieron cargar los libros."),
+    new Error("Books could not be loaded."),
   );
   show();
   expect(await screen.findByRole("alert")).toHaveTextContent(
-    "No se pudieron cargar los libros.",
+    "Books could not be loaded.",
   );
-  expect(screen.getByRole("link", { name: "Ir al catálogo" })).toHaveAttribute(
+  expect(screen.getByRole("link", { name: "Go to catalog" })).toHaveAttribute(
     "href",
-    "/catalogo",
+    "/catalog",
   );
   expect(
-    screen.queryByRole("status", { name: "Cargando libros destacados" }),
+    screen.queryByRole("status", { name: "Loading featured books" }),
   ).not.toBeInTheDocument();
 });

@@ -1,5 +1,6 @@
 /** @jest-environment node */
 import { supabase } from "../../src/lib/supabase";
+import { saveAdminBook } from "../../src/lib/admin";
 import {
   borrowBook,
   reserveBook,
@@ -35,7 +36,48 @@ const response = (data: unknown, status = 200) =>
     headers: { "Content-Type": "application/json" },
   });
 
-test("consulta solo inventario activo con stock y lee todos los rangos del servidor", async () => {
+test("legacy loan errors are displayed in English without changing the database", async () => {
+  (fetch as jest.Mock).mockResolvedValue(
+    response(
+      {
+        message: "No hay ejemplares disponibles; puedes reservarlo.",
+        code: "P0001",
+      },
+      400,
+    ),
+  );
+  await expect(borrowBook(book)).rejects.toThrow(
+    "No copies are available. You can reserve this book.",
+  );
+});
+test("legacy administrator permission errors are displayed in English", async () => {
+  (fetch as jest.Mock).mockResolvedValue(
+    response(
+      { message: "Acceso exclusivo para administradores.", code: "P0001" },
+      403,
+    ),
+  );
+  await expect(saveAdminBook(book, 1)).rejects.toThrow(
+    "Administrator access required.",
+  );
+});
+test("legacy inventory errors preserve the active-loan count in English", async () => {
+  (fetch as jest.Mock).mockResolvedValue(
+    response(
+      {
+        message:
+          "No puedes reducir ejemplares por debajo de los préstamos activos (2).",
+        code: "P0001",
+      },
+      400,
+    ),
+  );
+  await expect(saveAdminBook(book, 1)).rejects.toThrow(
+    "Total copies cannot be lower than active loans (2).",
+  );
+});
+
+test("queries only active inventory with stock and reads every server range", async () => {
   const batch = Array.from({ length: 500 }, (_, i) => ({
     work_id: `OL${i + 1}W`,
     total_copies: 1,
@@ -74,7 +116,7 @@ beforeEach(async () => {
   });
   (fetch as jest.Mock).mockClear();
 });
-test("las operaciones protegidas envían el JWT al endpoint RPC real del SDK", async () => {
+test("protected operations send the JWT to the SDK RPC endpoint", async () => {
   (fetch as jest.Mock).mockImplementation(async () => response("id"));
   await borrowBook(book);
   await reserveBook(book);
@@ -95,15 +137,13 @@ test("las operaciones protegidas envían el JWT al endpoint RPC real del SDK", a
   });
   expect(JSON.parse(calls[0][1].body)).toMatchObject({ p_work_id: "OL1W" });
 });
-test("un rechazo del servidor se propaga hasta la interfaz", async () => {
+test("a server rejection propagates to the interface", async () => {
   (fetch as jest.Mock).mockResolvedValue(
-    response({ message: "No hay ejemplares disponibles", code: "P0001" }, 400),
+    response({ message: "No hay copies available", code: "P0001" }, 400),
   );
-  await expect(borrowBook(book)).rejects.toThrow(
-    "No hay ejemplares disponibles",
-  );
+  await expect(borrowBook(book)).rejects.toThrow("No hay copies available");
 });
-test("lectura y eliminación se limitan a la obra y conservan Authorization", async () => {
+test("reading and deletion are scoped to the work and preserve Authorization", async () => {
   (fetch as jest.Mock).mockResolvedValue(response({ status: "reading" }));
   expect(await getReadingStatus("OL1W")).toBe("reading");
   (fetch as jest.Mock).mockResolvedValue(new Response(null, { status: 204 }));
@@ -116,7 +156,7 @@ test("lectura y eliminación se limitan a la obra y conservan Authorization", as
     "Bearer test-token",
   );
 });
-test("guardar lectura obtiene la identidad autenticada y usa su propietario", async () => {
+test("saving a reading status uses the authenticated owner", async () => {
   (fetch as jest.Mock).mockImplementation(async (input) =>
     String(input).includes("/auth/v1/user")
       ? response({ id: "student" })

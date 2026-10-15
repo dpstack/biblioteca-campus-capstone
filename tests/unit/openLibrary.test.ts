@@ -3,7 +3,7 @@ beforeEach(() => {
   global.fetch = jest.fn();
 });
 
-test("restringe obras en el servidor antes de paginar y conserva título, categoría y orden", async () => {
+test("restricts works on the server before pagination and preserves title, category, and order", async () => {
   (fetch as jest.Mock).mockResolvedValue({
     ok: true,
     json: async () => ({
@@ -30,12 +30,12 @@ test("restringe obras en el servidor antes de paginar y conserva título, catego
   expect(result.total).toBe(30);
 });
 
-test("sin ejemplares disponibles no consulta Open Library", async () => {
+test("does not query Open Library when no copies are available", async () => {
   expect(await searchBooks({ workIds: [] })).toEqual({ books: [], total: 0 });
   expect(fetch).not.toHaveBeenCalled();
 });
 
-test("el inventario forma parte de la caché de orden por autor", async () => {
+test("inventory is part of the author-sort cache key", async () => {
   (fetch as jest.Mock).mockResolvedValue({
     ok: true,
     json: async () => ({
@@ -47,7 +47,7 @@ test("el inventario forma parte de la caché de orden por autor", async () => {
   await searchBooks({ term: "stock-cache", sort: "author", workIds: ["OL2W"] });
   expect(fetch).toHaveBeenCalledTimes(2);
 });
-test("normaliza resultados y descarta obras inválidas usando fetch simulado", async () => {
+test("normalizes results and discards invalid works with mocked fetch", async () => {
   (fetch as jest.Mock).mockResolvedValue({
     ok: true,
     json: async () => ({
@@ -73,21 +73,21 @@ test("normaliza resultados y descarta obras inválidas usando fetch simulado", a
   expect(url.searchParams.get("title")).toBe("Campus");
   expect(url.searchParams.get("page")).toBe("1");
 });
-test("propaga errores HTTP y de red", async () => {
+test("propaga errores HTTP y of red", async () => {
   (fetch as jest.Mock).mockResolvedValue({ ok: false, status: 503 });
   await expect(searchBooks({})).rejects.toThrow("503");
   (fetch as jest.Mock).mockRejectedValue(new Error("Offline"));
   await expect(searchBooks({})).rejects.toThrow("Offline");
 });
-test("rechaza IDs inválidos antes de hacer una petición", async () => {
-  await expect(getWork("../secret")).rejects.toThrow("Identificador");
+test("rejects invalid identifiers before requesting data", async () => {
+  await expect(getWork("../secret")).rejects.toThrow("identifier");
   expect(fetch).not.toHaveBeenCalled();
 });
 test.each([
   ["newest", "new"],
   ["oldest", "old"],
   ["popularity", "readinglog"],
-])("envía orden global %s a la API", async (sort, expected) => {
+])("sends global %s ordering to the API", async (sort, expected) => {
   (fetch as jest.Mock).mockResolvedValue({
     ok: true,
     json: async () => ({ docs: [], numFound: 0 }),
@@ -98,10 +98,10 @@ test.each([
   expect(url.searchParams.get("page")).toBe("1001");
 });
 
-test("ordena toda una búsqueda por autor antes de paginar y conserva el resultado al avanzar", async () => {
+test("sorts the whole search by author before pagination and preserves it across pages", async () => {
   const docs = Array.from({ length: 30 }, (_, index) => ({
     key: `/works/OL${index + 200}W`,
-    title: `Obra ${index}`,
+    title: `Work ${index}`,
     author_name: [index < 6 ? "Zora" : "Ana"],
   }));
   (fetch as jest.Mock).mockResolvedValue({
@@ -131,27 +131,27 @@ test("ordena toda una búsqueda por autor antes de paginar y conserva el resulta
   );
 });
 
-test("rechaza búsquedas amplias en lugar de presentar un orden parcial por autor", async () => {
+test("rejects broad searches rather than showing a partial author order", async () => {
   (fetch as jest.Mock).mockResolvedValue({
     ok: true,
     json: async () => ({ docs: [], numFound: 201 }),
   });
   await expect(
     searchBooks({ term: "broad-author-fixture", sort: "author" }),
-  ).rejects.toThrow("200 obras o menos");
+  ).rejects.toThrow("200 works or fewer");
 });
 
-test("no ordena por autor una respuesta incompleta", async () => {
+test("rejects incomplete results before author sorting", async () => {
   (fetch as jest.Mock).mockResolvedValue({
     ok: true,
     json: async () => ({ docs: [{ key: "OL7W", title: "Uno" }], numFound: 2 }),
   });
   await expect(
     searchBooks({ term: "incomplete-author-fixture", sort: "author" }),
-  ).rejects.toThrow("incompleta");
+  ).rejects.toThrow("incomplete");
 });
 
-test("desempata autores por título y deja las obras sin autor al final", async () => {
+test("breaks author ties by title and places unknown authors last", async () => {
   (fetch as jest.Mock).mockResolvedValue({
     ok: true,
     json: async () => ({

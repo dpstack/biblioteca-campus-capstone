@@ -22,7 +22,7 @@ export function ReadingControl({ book }: { book: BookSnapshot }) {
       })
       .catch(() => {
         if (active)
-          setError("No pudimos cargar tu estado de lectura. Intenta de nuevo.");
+          setError("We could not load your reading status. Please try again.");
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -42,11 +42,13 @@ export function ReadingControl({ book }: { book: BookSnapshot }) {
       setStatus(next);
       setMessage(
         next
-          ? "Tu estado de lectura se guardó."
-          : "Libro eliminado de tu lista.",
+          ? "Your reading status was saved."
+          : "Book removed from your list.",
       );
     } catch {
-      setError("No pudimos guardar el cambio. Tu estado anterior se conserva.");
+      setError(
+        "We could not save the change. Your previous status has been kept.",
+      );
     } finally {
       setSaving(false);
     }
@@ -54,7 +56,7 @@ export function ReadingControl({ book }: { book: BookSnapshot }) {
 
   return (
     <div className="reading-control" aria-busy={loading || saving}>
-      <label htmlFor="reading-status">Estado en mi lista de lectura</label>
+      <label htmlFor="reading-status">My reading status</label>
       <select
         id="reading-status"
         value={status}
@@ -62,11 +64,11 @@ export function ReadingControl({ book }: { book: BookSnapshot }) {
         onChange={(event) => void save(event.target.value as ReadingStatus)}
       >
         <option value="" disabled>
-          {loading ? "Cargando estado…" : "Seleccionar estado"}
+          {loading ? "Loading status…" : "Select a status"}
         </option>
-        <option value="want_to_read">Quiero leer</option>
-        <option value="reading">Leyendo</option>
-        <option value="finished">Terminado</option>
+        <option value="want_to_read">Want to read</option>
+        <option value="reading">Reading</option>
+        <option value="finished">Finished</option>
       </select>
       {status && (
         <button
@@ -75,11 +77,11 @@ export function ReadingControl({ book }: { book: BookSnapshot }) {
           disabled={saving || loading || Boolean(error)}
           onClick={() => void save("")}
         >
-          Quitar de mi lista
+          Remove from my list
         </button>
       )}
-      {loading && <p role="status">Cargando tu estado de lectura…</p>}
-      {saving && <p role="status">Guardando…</p>}
+      {loading && <p role="status">Loading your reading status…</p>}
+      {saving && <p role="status">Saving…</p>}
       {message && (
         <p className="action-feedback success" role="status">
           {message}
@@ -97,7 +99,7 @@ export function ReadingControl({ book }: { book: BookSnapshot }) {
               setRetry((value) => value + 1);
             }}
           >
-            Volver a cargar
+            Reload
           </button>
         </p>
       )}

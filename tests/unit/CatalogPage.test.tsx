@@ -29,22 +29,20 @@ beforeEach(() => {
   ]);
 });
 
-test("el filtro restringe la búsqueda antes de paginar, conserva los otros filtros y se puede desactivar", async () => {
+test("the filter restricts search before pagination, preserves other filters, and can be disabled", async () => {
   const user = userEvent.setup();
   render(
     <MemoryRouter
-      initialEntries={[
-        "/catalogo?q=Campus&category=science&sort=newest&page=2",
-      ]}
+      initialEntries={["/catalog?q=Campus&category=science&sort=newest&page=2"]}
     >
       <CatalogPage />
     </MemoryRouter>,
   );
-  await screen.findByText("Página 2 de 2");
+  await screen.findByText("Page 2 of 2");
   await user.click(
-    screen.getByRole("checkbox", { name: "Disponibles para préstamo" }),
+    screen.getByRole("checkbox", { name: "Available to borrow" }),
   );
-  await screen.findByText("Página 1 de 2");
+  await screen.findByText("Page 1 of 2");
   expect(searchBooks).toHaveBeenLastCalledWith(
     expect.objectContaining({
       term: "Campus",
@@ -55,50 +53,50 @@ test("el filtro restringe la búsqueda antes de paginar, conserva los otros filt
     }),
     expect.any(AbortSignal),
   );
-  expect(await screen.findByText("Disponible")).toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "Siguiente" }));
-  await screen.findByText("Página 2 de 2");
+  expect(await screen.findByText("Available")).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Next" }));
+  await screen.findByText("Page 2 of 2");
   expect(searchBooks).toHaveBeenLastCalledWith(
     expect.objectContaining({ page: 2, workIds: ["OL1W"] }),
     expect.any(AbortSignal),
   );
   await user.click(
-    screen.getByRole("checkbox", { name: "Disponibles para préstamo" }),
+    screen.getByRole("checkbox", { name: "Available to borrow" }),
   );
-  await screen.findByText("Página 1 de 2");
+  await screen.findByText("Page 1 of 2");
   expect(
     (searchBooks as jest.Mock).mock.calls.at(-1)[0].workIds,
   ).toBeUndefined();
 });
 
-test("un error de inventario no se presenta como una colección vacía y permite reintentar", async () => {
+test("an inventory error is not shown as an empty collection and allows retrying", async () => {
   (getAvailableInventory as jest.Mock).mockRejectedValueOnce(
-    new Error("Inventario desconectado"),
+    new Error("Inventory disconnected"),
   );
   const user = userEvent.setup();
   render(
-    <MemoryRouter initialEntries={["/catalogo?available=1"]}>
+    <MemoryRouter initialEntries={["/catalog?available=1"]}>
       <CatalogPage />
     </MemoryRouter>,
   );
   expect(await screen.findByRole("alert")).toHaveTextContent(
-    "Inventario desconectado",
+    "Inventory disconnected",
   );
   expect(searchBooks).not.toHaveBeenCalled();
-  await user.click(screen.getByRole("button", { name: "Reintentar" }));
+  await user.click(screen.getByRole("button", { name: "Retry" }));
   await screen.findByRole("heading", { name: "Campus" });
   expect(screen.getByRole("checkbox")).toBeChecked();
 });
-test("el orden elegido se conserva al avanzar y cambiar categoría", async () => {
+test("the selected order survives paging and category changes", async () => {
   const user = userEvent.setup();
   render(
-    <MemoryRouter initialEntries={["/catalogo?q=Campus"]}>
+    <MemoryRouter initialEntries={["/catalog?q=Campus"]}>
       <CatalogPage />
     </MemoryRouter>,
   );
   await screen.findByRole("heading", { name: "Campus" });
   await user.selectOptions(
-    screen.getByRole("combobox", { name: "Ordenar:" }),
+    screen.getByRole("combobox", { name: "Sort by:" }),
     "newest",
   );
   await waitFor(() =>
@@ -107,17 +105,17 @@ test("el orden elegido se conserva al avanzar y cambiar categoría", async () =>
       expect.any(AbortSignal),
     ),
   );
-  await user.click(await screen.findByRole("button", { name: "Siguiente" }));
+  await user.click(await screen.findByRole("button", { name: "Next" }));
   await waitFor(() =>
     expect(searchBooks).toHaveBeenLastCalledWith(
       expect.objectContaining({ page: 2, sort: "newest" }),
       expect.any(AbortSignal),
     ),
   );
-  expect(screen.getByRole("combobox", { name: "Ordenar:" })).toHaveValue(
+  expect(screen.getByRole("combobox", { name: "Sort by:" })).toHaveValue(
     "newest",
   );
-  await user.click(screen.getByRole("button", { name: /Ciencia/ }));
+  await user.click(screen.getByRole("button", { name: /Science/ }));
   await waitFor(() =>
     expect(searchBooks).toHaveBeenLastCalledWith(
       expect.objectContaining({ page: 1, category: "science", sort: "newest" }),
@@ -125,34 +123,34 @@ test("el orden elegido se conserva al avanzar y cambiar categoría", async () =>
     ),
   );
 });
-test("la navegación continúa después de la página 1000", async () => {
+test("navigation continues past page 1000", async () => {
   (searchBooks as jest.Mock).mockResolvedValue({ books: [book], total: 48000 });
   const user = userEvent.setup();
   render(
-    <MemoryRouter initialEntries={["/catalogo?page=1001&sort=popularity"]}>
+    <MemoryRouter initialEntries={["/catalog?page=1001&sort=popularity"]}>
       <CatalogPage />
     </MemoryRouter>,
   );
-  await screen.findByText("Página 1001 de 2000");
-  await user.click(screen.getByRole("button", { name: "Siguiente" }));
-  await screen.findByText("Página 1002 de 2000");
+  await screen.findByText("Page 1001 of 2000");
+  await user.click(screen.getByRole("button", { name: "Next" }));
+  await screen.findByText("Page 1002 of 2000");
   expect(searchBooks).toHaveBeenLastCalledWith(
     expect.objectContaining({ page: 1002, sort: "popularity" }),
     expect.any(AbortSignal),
   );
 });
-test("los errores permiten reintentar sin perder la búsqueda", async () => {
+test("errors allow retrying without losing the search", async () => {
   (searchBooks as jest.Mock)
     .mockRejectedValueOnce(new Error("Offline"))
     .mockResolvedValue({ books: [book], total: 1 });
   const user = userEvent.setup();
   render(
-    <MemoryRouter initialEntries={["/catalogo?q=Campus&sort=oldest"]}>
+    <MemoryRouter initialEntries={["/catalog?q=Campus&sort=oldest"]}>
       <CatalogPage />
     </MemoryRouter>,
   );
   expect(await screen.findByRole("alert")).toHaveTextContent("Offline");
-  await user.click(screen.getByRole("button", { name: "Reintentar" }));
+  await user.click(screen.getByRole("button", { name: "Retry" }));
   await screen.findByRole("heading", { name: "Campus" });
   expect(searchBooks).toHaveBeenLastCalledWith(
     expect.objectContaining({ term: "Campus", sort: "oldest" }),

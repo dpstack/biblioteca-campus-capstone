@@ -15,7 +15,7 @@ jest.mock("../../src/lib/openLibrary", () => ({
 }));
 const book = {
   work_id: "OL1W",
-  title: "Biblioteca",
+  title: "Library",
   author: "Ana",
   cover_id: null,
   total_copies: 2,
@@ -41,10 +41,10 @@ function show(session: any = { user: { id: "admin" } }) {
     <AuthContext.Provider
       value={{ session, isLoading: false, signOut: jest.fn() }}
     >
-      <MemoryRouter initialEntries={["/administracion"]}>
+      <MemoryRouter initialEntries={["/admin"]}>
         <Routes>
-          <Route path="/administracion" element={<AdminPage />} />
-          <Route path="/acceso" element={<h1>Acceso</h1>} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/login" element={<h1>Login</h1>} />
         </Routes>
       </MemoryRouter>
     </AuthContext.Provider>,
@@ -54,46 +54,44 @@ beforeEach(() => {
   (admin.getAdminDashboard as jest.Mock).mockResolvedValue(dashboard);
   (admin.saveAdminBook as jest.Mock).mockResolvedValue(undefined);
   (open.searchBooks as jest.Mock).mockResolvedValue({
-    books: [{ id: "OL2W", title: "Nueva obra", authors: ["Eva"], coverId: 2 }],
+    books: [{ id: "OL2W", title: "New work", authors: ["Eva"], coverId: 2 }],
     total: 1,
   });
 });
-test("sin sesión dirige al acceso y no consulta información administrativa", async () => {
+test("redirects signed-out visitors without querying administrative data", async () => {
   show(null);
-  expect(await screen.findByRole("heading", { name: "Acceso" })).toBeVisible();
+  expect(await screen.findByRole("heading", { name: "Login" })).toBeVisible();
   expect(admin.getAdminDashboard).not.toHaveBeenCalled();
 });
-test("denegación del backend no revela controles ni circulación", async () => {
+test("backend denial reveals no controls or circulation", async () => {
   (admin.getAdminDashboard as jest.Mock).mockRejectedValue(
-    new Error("Acceso exclusivo para administradores."),
+    new Error("Login exclusivo para administradores."),
   );
   show();
   expect(await screen.findByRole("alert")).toHaveTextContent("exclusivo");
   expect(
-    screen.queryByRole("button", { name: "Buscar libros" }),
+    screen.queryByRole("button", { name: "Search books" }),
   ).not.toBeInTheDocument();
   expect(screen.queryByText("reader@example.invalid")).not.toBeInTheDocument();
 });
-test("buscar, añadir ejemplares y guardar recarga la colección", async () => {
+test("searching, adding copies, and saving refreshes the collection", async () => {
   const user = userEvent.setup();
   show();
   await user.type(
-    await screen.findByLabelText("Título, autor o palabra clave"),
-    "Nueva obra",
+    await screen.findByLabelText("Title, author, or keyword"),
+    "New work",
   );
-  await user.click(screen.getByRole("button", { name: "Buscar libros" }));
-  await user.click(
-    await screen.findByRole("button", { name: "Gestionar OL2W" }),
-  );
-  const copies = screen.getByLabelText("Total de ejemplares");
+  await user.click(screen.getByRole("button", { name: "Search books" }));
+  await user.click(await screen.findByRole("button", { name: "Manage OL2W" }));
+  const copies = screen.getByLabelText("Total copies");
   await user.clear(copies);
   await user.type(copies, "3");
-  await user.click(screen.getByRole("button", { name: "Guardar inventario" }));
+  await user.click(screen.getByRole("button", { name: "Save inventory" }));
   await waitFor(() =>
     expect(admin.saveAdminBook).toHaveBeenCalledWith(
       {
         work_id: "OL2W",
-        title: "Nueva obra",
+        title: "New work",
         author: "Eva",
         cover_id: 2,
         total: 3,
@@ -104,28 +102,26 @@ test("buscar, añadir ejemplares y guardar recarga la colección", async () => {
     ),
   );
   expect(await screen.findByRole("status")).toHaveTextContent(
-    "Inventario guardado",
+    "Inventory saved",
   );
   expect(admin.getAdminDashboard).toHaveBeenCalledTimes(2);
 });
-test("retirar usa el backend y conserva editor si hay reservas pendientes", async () => {
+test("retirement uses the backend and preserves the editor when reservations are pending", async () => {
   const user = userEvent.setup();
   (admin.saveAdminBook as jest.Mock).mockRejectedValue(
-    new Error("Resuelve las reservas pendientes antes de retirar la obra."),
+    new Error("Resolve pending reservations before retiring this work."),
   );
   show();
-  await user.click(await screen.findByRole("button", { name: "Editar OL1W" }));
+  await user.click(await screen.findByRole("button", { name: "Edit OL1W" }));
   await user.click(
-    screen.getByLabelText("Retirar de nuevos préstamos y reservas"),
+    screen.getByLabelText("Retire from new loans and reservations"),
   );
-  await user.click(screen.getByRole("button", { name: "Guardar inventario" }));
+  await user.click(screen.getByRole("button", { name: "Save inventory" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
-    "reservas pendientes",
+    "pending reservations",
   );
   expect(
-    screen.getByLabelText("Retirar de nuevos préstamos y reservas"),
+    screen.getByLabelText("Retire from new loans and reservations"),
   ).toBeChecked();
-  expect(
-    screen.getByRole("button", { name: "Guardar inventario" }),
-  ).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Save inventory" })).toBeEnabled();
 });

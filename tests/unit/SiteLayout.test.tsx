@@ -15,42 +15,42 @@ function show(session = null) {
     </MemoryRouter>,
   );
 }
-test("el menú se abre y se cierra al navegar", async () => {
+test("the menu opens and closes on navigation", async () => {
   const user = userEvent.setup();
   show();
-  await user.click(screen.getByRole("button", { name: "Abrir menú" }));
-  expect(screen.getByRole("button", { name: "Cerrar menú" })).toHaveAttribute(
+  await user.click(screen.getByRole("button", { name: "Open menu" }));
+  expect(screen.getByRole("button", { name: "Close menu" })).toHaveAttribute(
     "aria-expanded",
     "true",
   );
-  await user.click(screen.getByRole("link", { name: "Explorar catálogo" }));
-  expect(screen.getByRole("button", { name: "Abrir menú" })).toHaveAttribute(
+  await user.click(screen.getByRole("link", { name: "Explore catalog" }));
+  expect(screen.getByRole("button", { name: "Open menu" })).toHaveAttribute(
     "aria-expanded",
     "false",
   );
 });
-test("el acceso lleva al formulario si no hay sesión", () => {
+test("the login link opens the form when signed out", () => {
   show();
-  expect(screen.getByRole("link", { name: "Iniciar sesión" })).toHaveAttribute(
+  expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute(
     "href",
-    "/acceso",
+    "/login",
   );
 });
-test("la sesión activa lleva a la cuenta", () => {
+test("an active session links to the account", () => {
   show({ user: { id: "student" } } as any);
-  expect(screen.getByRole("link", { name: "Mi cuenta" })).toHaveAttribute(
+  expect(screen.getByRole("link", { name: "My account" })).toHaveAttribute(
     "href",
-    "/mi-biblioteca",
+    "/my-library",
   );
 });
 
-test("Escape cierra el menú desde su botón y devuelve el foco", async () => {
+test("Escape closes the menu and returns focus to its button", async () => {
   const user = userEvent.setup();
   show();
-  await user.click(screen.getByRole("button", { name: "Abrir menú" }));
+  await user.click(screen.getByRole("button", { name: "Open menu" }));
   await user.keyboard("{Escape}");
-  expect(screen.getByRole("button", { name: "Abrir menú" })).toHaveFocus();
-  expect(screen.getByRole("button", { name: "Abrir menú" })).toHaveAttribute(
+  expect(screen.getByRole("button", { name: "Open menu" })).toHaveFocus();
+  expect(screen.getByRole("button", { name: "Open menu" })).toHaveAttribute(
     "aria-expanded",
     "false",
   );

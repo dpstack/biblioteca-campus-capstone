@@ -13,17 +13,17 @@ import type { Book, BookSnapshot } from "../types";
 const snapshot = (book: Book): BookSnapshot => ({
   work_id: book.id,
   title: book.title.slice(0, 250),
-  author: (book.authors.join(", ") || "Autor no indicado").slice(0, 250),
+  author: (book.authors.join(", ") || "Unknown author").slice(0, 250),
   cover_id: book.coverId,
 });
 export default function AdminPage() {
   const { session, isLoading } = useAuth();
   return isLoading ? (
     <div className="page-status" role="status">
-      Comprobando sesión…
+      Checking session…
     </div>
   ) : !session ? (
-    <Navigate to="/acceso" replace />
+    <Navigate to="/login" replace />
   ) : (
     <AdminWorkspace key={session.user.id} />
   );
@@ -72,7 +72,11 @@ function AdminWorkspace() {
       });
       setResults(result.books);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "No se pudo buscar.");
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Search could not be completed.",
+      );
     } finally {
       setSearching(false);
     }
@@ -97,7 +101,9 @@ function AdminWorkspace() {
       });
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "No se pudo cargar la obra.",
+        cause instanceof Error
+          ? cause.message
+          : "The work could not be loaded.",
       );
     } finally {
       setPending(false);
@@ -112,10 +118,10 @@ function AdminWorkspace() {
     try {
       await saveAdminBook(editing, editing.total, editing.retired);
       setEditing(null);
-      setMessage("Inventario guardado.");
+      setMessage("Inventory saved.");
       setData(await getAdminDashboard());
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "No se pudo guardar.");
+      setError(cause instanceof Error ? cause.message : "Could not save.");
     } finally {
       setPending(false);
     }
@@ -123,12 +129,10 @@ function AdminWorkspace() {
   return (
     <div className="container admin-page">
       <header className="admin-intro">
-        <span className="eyebrow">GESTIÓN DE LA BIBLIOTECA</span>
-        <h1>Administración</h1>
-        <p>
-          Gestiona los ejemplares de la colección y consulta su circulación.
-        </p>
-        <Link to="/mi-biblioteca">Volver a mi biblioteca</Link>
+        <span className="eyebrow">LIBRARY MANAGEMENT</span>
+        <h1>Administration</h1>
+        <p>Manage copies in the collection and review circulation.</p>
+        <Link to="/my-library">Back to my library</Link>
       </header>
       {error && (
         <div className="form-feedback error" role="alert">
@@ -147,10 +151,10 @@ function AdminWorkspace() {
               className="button button-primary"
               onClick={() => setRetry((v) => v + 1)}
             >
-              Reintentar acceso
+              Retry access
             </button>
           ) : (
-            <p role="status">Comprobando permisos…</p>
+            <p role="status">Checking permissions…</p>
           )}
         </div>
       ) : (
@@ -158,21 +162,21 @@ function AdminWorkspace() {
           <div className="account-stats">
             <div>
               <strong>{data.books.length}</strong>
-              <small>Obras registradas</small>
+              <small>Registered works</small>
             </div>
             <div>
               <strong>{data.loans.length}</strong>
-              <small>Préstamos activos</small>
+              <small>Active loans</small>
             </div>
             <div>
               <strong>{data.reservations.length}</strong>
-              <small>Reservas pendientes</small>
+              <small>Pending reservations</small>
             </div>
           </div>
           <section className="admin-section" aria-labelledby="add-heading">
-            <h2 id="add-heading">Añadir desde Open Library</h2>
+            <h2 id="add-heading">Add from Open Library</h2>
             <form className="admin-search" onSubmit={search}>
-              <label htmlFor="admin-query">Título, autor o palabra clave</label>
+              <label htmlFor="admin-query">Title, author, or keyword</label>
               <input
                 id="admin-query"
                 value={query}
@@ -185,7 +189,7 @@ function AdminWorkspace() {
                 className="button button-primary"
                 disabled={searching || pending}
               >
-                {searching ? "Buscando…" : "Buscar libros"}
+                {searching ? "Searching…" : "Search books"}
               </button>
             </form>
             <ul className="admin-list">
@@ -193,7 +197,7 @@ function AdminWorkspace() {
                 <li key={book.id}>
                   <div>
                     <strong>{book.title}</strong>
-                    <p>{book.authors.join(", ") || "Autor no indicado"}</p>
+                    <p>{book.authors.join(", ") || "Unknown author"}</p>
                   </div>
                   <button
                     className="button"
@@ -210,7 +214,7 @@ function AdminWorkspace() {
                       setMessage("");
                     }}
                   >
-                    Gestionar {book.id}
+                    Manage {book.id}
                   </button>
                 </li>
               ))}
@@ -218,12 +222,12 @@ function AdminWorkspace() {
           </section>
           {editing && (
             <section className="admin-section" aria-labelledby="edit-heading">
-              <h2 id="edit-heading">Editar ejemplares: {editing.title}</h2>
+              <h2 id="edit-heading">Edit copies: {editing.title}</h2>
               <form className="admin-editor" onSubmit={save}>
                 <p>
                   {editing.author} · {editing.work_id}
                 </p>
-                <label htmlFor="admin-copies">Total de ejemplares</label>
+                <label htmlFor="admin-copies">Total copies</label>
                 <input
                   id="admin-copies"
                   type="number"
@@ -246,15 +250,15 @@ function AdminWorkspace() {
                       setEditing({ ...editing, retired: event.target.checked })
                     }
                   />
-                  Retirar de nuevos préstamos y reservas
+                  Retire from new loans and reservations
                 </label>
                 <p>
-                  Los ejemplares prestados y el historial se conservan. No
-                  puedes retirar una obra con reservas pendientes.
+                  Existing loans and history are preserved. You cannot retire a
+                  work with pending reservations.
                 </p>
                 <div className="admin-actions">
                   <button className="button button-primary" disabled={pending}>
-                    {pending ? "Guardando…" : "Guardar inventario"}
+                    {pending ? "Saving…" : "Save inventory"}
                   </button>
                   <button
                     type="button"
@@ -262,7 +266,7 @@ function AdminWorkspace() {
                     disabled={pending}
                     onClick={() => setEditing(null)}
                   >
-                    Cancelar edición
+                    Cancel editing
                   </button>
                 </div>
               </form>
@@ -272,17 +276,18 @@ function AdminWorkspace() {
             className="admin-section"
             aria-labelledby="collection-heading"
           >
-            <h2 id="collection-heading">Colección</h2>
+            <h2 id="collection-heading">Collection</h2>
             <ul className="admin-list">
               {data.books.map((book) => (
                 <li key={book.work_id}>
                   <div>
-                    <Link to={`/libro/${book.work_id}`}>
+                    <Link to={`/books/${book.work_id}`}>
                       <strong>{book.title || book.work_id}</strong>
                     </Link>
                     <p>
-                      {book.available_copies} disponibles de {book.total_copies}{" "}
-                      · {book.retired ? "Retirada" : "Activa"}
+                      {book.available_copies} available out of{" "}
+                      {book.total_copies} ·{" "}
+                      {book.retired ? "Retired" : "Active"}
                     </p>
                   </div>
                   <button
@@ -290,16 +295,16 @@ function AdminWorkspace() {
                     disabled={pending}
                     onClick={() => void choose(book)}
                   >
-                    Editar {book.work_id}
+                    Edit {book.work_id}
                   </button>
                 </li>
               ))}
             </ul>
           </section>
           <section className="admin-section" aria-labelledby="loans-heading">
-            <h2 id="loans-heading">Préstamos activos</h2>
+            <h2 id="loans-heading">Active loans</h2>
             {data.loans.length === 0 ? (
-              <p>No hay préstamos activos.</p>
+              <p>No active loans.</p>
             ) : (
               <ul className="admin-list">
                 {data.loans.map((loan) => (
@@ -308,14 +313,13 @@ function AdminWorkspace() {
                       <strong>{loan.title}</strong>
                       <p>{loan.email}</p>
                       <p>
-                        Entrega:{" "}
-                        {new Date(loan.due_at).toLocaleDateString("es")}
+                        Due: {new Date(loan.due_at).toLocaleDateString("en")}
                         {new Date(loan.due_at).getTime() < openedAt
-                          ? " · Vencido"
+                          ? " · Overdue"
                           : ""}
                       </p>
                     </div>
-                    <Link to={`/libro/${loan.work_id}`}>Ver obra</Link>
+                    <Link to={`/books/${loan.work_id}`}>View work</Link>
                   </li>
                 ))}
               </ul>
@@ -325,9 +329,9 @@ function AdminWorkspace() {
             className="admin-section"
             aria-labelledby="reservations-heading"
           >
-            <h2 id="reservations-heading">Reservas pendientes</h2>
+            <h2 id="reservations-heading">Pending reservations</h2>
             {data.reservations.length === 0 ? (
-              <p>No hay reservas pendientes.</p>
+              <p>No pending reservations.</p>
             ) : (
               <ol className="admin-list">
                 {data.reservations.map((reservation) => (
@@ -335,7 +339,7 @@ function AdminWorkspace() {
                     <div>
                       <strong>{reservation.title}</strong>
                       <p>
-                        {reservation.email} · Turno{" "}
+                        {reservation.email} · Position{" "}
                         {data.reservations
                           .filter(
                             (item) => item.work_id === reservation.work_id,
@@ -344,11 +348,11 @@ function AdminWorkspace() {
                       </p>
                       <p>
                         {new Date(reservation.created_at).toLocaleDateString(
-                          "es",
+                          "en",
                         )}
                       </p>
                     </div>
-                    <Link to={`/libro/${reservation.work_id}`}>Ver obra</Link>
+                    <Link to={`/books/${reservation.work_id}`}>View work</Link>
                   </li>
                 ))}
               </ol>

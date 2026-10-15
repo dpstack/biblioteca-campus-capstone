@@ -59,7 +59,7 @@ const readJson = async <T>(url: URL, signal?: AbortSignal): Promise<T> => {
   const response = await fetch(url, { signal });
   if (!response.ok)
     throw new Error(
-      `Open Library respondió ${response.status}. Intenta de nuevo.`,
+      `Open Library returned ${response.status}. Please try again.`,
     );
   return response.json() as Promise<T>;
 };
@@ -103,8 +103,7 @@ export async function searchBooks(
     category,
     workIds,
   ]);
-  if (signal?.aborted)
-    throw new DOMException("Búsqueda cancelada", "AbortError");
+  if (signal?.aborted) throw new DOMException("Search canceled", "AbortError");
   if (workIds?.length === 0) return { books: [], total: 0 };
   const cached = authorSort ? authorSearchCache.get(cacheKey) : undefined;
   if (cached && Date.now() - cached.createdAt < 120_000) {
@@ -142,7 +141,7 @@ export async function searchBooks(
   const sorts = { newest: "new", oldest: "old", popularity: "readinglog" };
   if (options.sort && options.sort in sorts)
     url.searchParams.set("sort", sorts[options.sort as keyof typeof sorts]);
-  url.searchParams.set("lang", "es");
+  url.searchParams.set("lang", "en");
   const result = await readJson<SearchResponse>(url, signal);
   const total = result.numFound ?? result.num_found;
   const books = (result.docs ?? [])
@@ -151,12 +150,12 @@ export async function searchBooks(
   if (!authorSort) return { books, total: total ?? 0 };
   if (total === undefined || total > AUTHOR_LIMIT) {
     throw new Error(
-      "Para ordenar toda la búsqueda por autor, afina el título, autor o categoría hasta obtener 200 obras o menos, o elige otro orden.",
+      "To sort the entire search by author, refine the title, author, or category to 200 works or fewer, or choose another sort order.",
     );
   }
   if ((result.docs ?? []).length < total) {
     throw new Error(
-      "Open Library devolvió una búsqueda incompleta. Reintenta antes de ordenar por autor.",
+      "Open Library returned incomplete results. Please retry before sorting by author.",
     );
   }
   books.sort((a, b) => {
@@ -165,8 +164,8 @@ export async function searchBooks(
     if (!first && second) return 1;
     if (first && !second) return -1;
     return (
-      first.localeCompare(second, "es", { sensitivity: "base" }) ||
-      a.title.localeCompare(b.title, "es") ||
+      first.localeCompare(second, "en", { sensitivity: "base" }) ||
+      a.title.localeCompare(b.title, "en") ||
       a.id.localeCompare(b.id)
     );
   });
@@ -190,8 +189,7 @@ export async function getWork(
   workId: string,
   signal?: AbortSignal,
 ): Promise<WorkDetail> {
-  if (!/^OL\d+W$/.test(workId))
-    throw new Error("Identificador de libro inválido.");
+  if (!/^OL\d+W$/.test(workId)) throw new Error("Invalid book identifier.");
   const url = new URL(`/works/${workId}.json`, API_ROOT);
   const work = await readJson<WorkResponse>(url, signal);
   const authorKeys = (work.authors ?? [])
@@ -215,7 +213,7 @@ export async function getWork(
   );
   return {
     id: workId,
-    title: work.title ?? "Sin título",
+    title: work.title ?? "Untitled",
     authors: authors.filter(Boolean),
     firstPublishYear: work.first_publish_date
       ? Number(work.first_publish_date.match(/\d{4}/)?.[0]) || null
@@ -228,7 +226,7 @@ export async function getWork(
       typeof work.description === "string"
         ? work.description
         : (work.description?.value ??
-          "Open Library no ofrece una descripción para esta obra."),
+          "Open Library does not provide a description for this work."),
     links: (work.links ?? []).filter(
       (link): link is { title: string; url: string } =>
         Boolean(link.title && link.url),

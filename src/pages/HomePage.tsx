@@ -31,7 +31,7 @@ export function HomePage() {
           setError(
             cause instanceof Error
               ? cause.message
-              : "No se pudieron cargar los libros.",
+              : "Books could not be loaded.",
           );
       })
       .finally(() => {
@@ -43,8 +43,8 @@ export function HomePage() {
   const onSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const term = query.trim();
-    if (term) navigate(`/catalogo?q=${encodeURIComponent(term)}`);
-    else navigate("/catalogo");
+    if (term) navigate(`/catalog?q=${encodeURIComponent(term)}`);
+    else navigate("/catalog");
   };
 
   return (
@@ -53,36 +53,36 @@ export function HomePage() {
         <div className="container hero-grid">
           <div className="hero-content">
             <span className="eyebrow light">
-              <Sparkles size={14} /> CONOCIMIENTO SIN LÍMITES
+              <Sparkles size={14} /> KNOWLEDGE WITHOUT LIMITS
             </span>
             <h1>
-              Tu próxima gran idea comienza <em>aquí.</em>
+              Your next great idea starts <em>here.</em>
             </h1>
             <p>
-              Explora miles de obras, encuentra nuevas perspectivas y lleva tus
-              lecturas contigo. La biblioteca universitaria, ahora a un clic.
+              Explore thousands of works, find new perspectives, and keep your
+              reading with you. Your university library is one click away.
             </p>
             <form className="hero-search" onSubmit={onSearch} role="search">
               <Search size={20} aria-hidden="true" />
               <label className="sr-only" htmlFor="home-search">
-                Buscar libros, autores o temas
+                Search books, authors, or subjects
               </label>
               <input
                 id="home-search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Busca libros, autores o temas..."
+                placeholder="Search books, authors, or subjects..."
                 maxLength={120}
               />
               <button type="submit">
-                Buscar <ArrowRight size={17} />
+                Search <ArrowRight size={17} />
               </button>
             </form>
             <div className="hero-chips">
-              <span>Explora por tema:</span>
-              <Link to="/catalogo?category=science">Ciencia</Link>
-              <Link to="/catalogo?category=history">Historia</Link>
-              <Link to="/catalogo?category=art">Arte</Link>
+              <span>Explore by subject:</span>
+              <Link to="/catalog?category=science">Science</Link>
+              <Link to="/catalog?category=history">History</Link>
+              <Link to="/catalog?category=art">Art</Link>
             </div>
           </div>
           <div className="hero-visual" aria-hidden="true">
@@ -105,9 +105,9 @@ export function HomePage() {
             <div className="visual-note">
               <BookOpen size={19} />
               <span>
-                Un mundo de historias
+                A world of stories
                 <br />
-                <strong>por descubrir</strong>
+                <strong>to discover</strong>
               </span>
             </div>
           </div>
@@ -115,18 +115,15 @@ export function HomePage() {
         <div className="hero-bottom-line" />
       </section>
 
-      <section
-        className="benefits-section"
-        aria-label="Beneficios de la biblioteca"
-      >
+      <section className="benefits-section" aria-label="Library benefits">
         <div className="container benefits-grid">
           <div>
             <span className="benefit-icon">
               <BookOpen size={22} />
             </span>
             <div>
-              <strong>Explora sin límites</strong>
-              <p>Descubre libros por título, autor o tema.</p>
+              <strong>Explore without limits</strong>
+              <p>Discover books by title, author, or subject.</p>
             </div>
           </div>
           <div>
@@ -134,8 +131,8 @@ export function HomePage() {
               <BookMarked size={22} />
             </span>
             <div>
-              <strong>Organiza tus lecturas</strong>
-              <p>Guarda lo que lees y lo que te inspira.</p>
+              <strong>Organize your reading</strong>
+              <p>Keep track of what you read and what inspires you.</p>
             </div>
           </div>
           <div>
@@ -143,8 +140,8 @@ export function HomePage() {
               <Clock3 size={22} />
             </span>
             <div>
-              <strong>Préstamos sencillos</strong>
-              <p>Consulta disponibilidad y fechas de entrega.</p>
+              <strong>Easy borrowing</strong>
+              <p>Check availability and due dates.</p>
             </div>
           </div>
         </div>
@@ -153,24 +150,24 @@ export function HomePage() {
       <section className="container featured-section">
         <div className="section-heading">
           <div>
-            <span className="eyebrow">SELECCIÓN PARA TI</span>
-            <h2>Ideas que vale la pena explorar</h2>
-            <p>Una muestra del catálogo para empezar tu búsqueda.</p>
+            <span className="eyebrow">SELECTED FOR YOU</span>
+            <h2>Ideas worth exploring</h2>
+            <p>A selection from the catalog to start your search.</p>
           </div>
-          <Link className="text-link" to="/catalogo">
-            Ver todo el catálogo <ArrowRight size={17} />
+          <Link className="text-link" to="/catalog">
+            View the full catalog <ArrowRight size={17} />
           </Link>
         </div>
         {error && (
           <div className="inline-message error" role="alert">
-            {error} <Link to="/catalogo">Ir al catálogo</Link>
+            {error} <Link to="/catalog">Go to catalog</Link>
           </div>
         )}
         {loading && (
           <div
             className="book-grid"
             role="status"
-            aria-label="Cargando libros destacados"
+            aria-label="Loading featured books"
           >
             {[0, 1, 2, 3].map((index) => (
               <div className="book-skeleton" key={index} />
@@ -179,8 +176,8 @@ export function HomePage() {
         )}
         {!loading && !error && books.length === 0 && (
           <div className="inline-message" role="status">
-            No hay destacados disponibles por ahora.{" "}
-            <Link to="/catalogo">Explorar el catálogo</Link>
+            No featured books are available right now.{" "}
+            <Link to="/catalog">Explore the catalog</Link>
           </div>
         )}
         {books.length > 0 && (
@@ -194,13 +191,11 @@ export function HomePage() {
 
       <section className="container discover-banner">
         <div>
-          <span className="eyebrow light">LA LECTURA CONTINÚA</span>
-          <h2>Cada libro abre una nueva puerta.</h2>
-          <p>
-            Encuentra el próximo capítulo de tu recorrido académico y personal.
-          </p>
-          <Link className="button button-cream" to="/catalogo">
-            Explorar ahora <ArrowRight size={17} />
+          <span className="eyebrow light">THE READING CONTINUES</span>
+          <h2>Every book opens a new door.</h2>
+          <p>Find the next chapter in your academic and personal journey.</p>
+          <Link className="button button-cream" to="/catalog">
+            Explore now <ArrowRight size={17} />
           </Link>
         </div>
         <div className="discover-ornament" aria-hidden="true">

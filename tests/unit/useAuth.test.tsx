@@ -24,7 +24,7 @@ beforeEach(() => {
     return { data: { subscription: { unsubscribe } } };
   });
 });
-test("restaura la sesión, atiende cambios y libera la suscripción", async () => {
+test("restores the session, handles changes, and cleans up the subscription", async () => {
   const session = { user: { id: "student" }, access_token: "test-token" };
   (auth.getSession as jest.Mock).mockResolvedValue({
     data: { session },
@@ -38,13 +38,13 @@ test("restaura la sesión, atiende cambios y libera la suscripción", async () =
   unmount();
   expect(unsubscribe).toHaveBeenCalledTimes(1);
 });
-test("un fallo de red no deja la sesión cargando indefinidamente", async () => {
+test("a network failure does not leave session restoration loading indefinitely", async () => {
   (auth.getSession as jest.Mock).mockRejectedValue(new Error("Offline"));
   const { result } = renderHook(useAuth, { wrapper: AuthProvider });
   await waitFor(() => expect(result.current.isLoading).toBe(false));
   expect(result.current.session).toBeNull();
 });
-test("logout limpia la sesión y propaga errores de cierre", async () => {
+test("sign-out clears the session and propagates failures", async () => {
   (auth.signOut as jest.Mock).mockResolvedValue({ error: null });
   const { result } = renderHook(useAuth, { wrapper: AuthProvider });
   await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -58,7 +58,7 @@ test("logout limpia la sesión y propaga errores de cierre", async () => {
   });
   await expect(result.current.signOut()).rejects.toThrow("No se pudo cerrar");
 });
-test("un evento reciente prevalece sobre la restauración inicial lenta", async () => {
+test("a recent auth event takes precedence over slow initial restoration", async () => {
   let resolve;
   (auth.getSession as jest.Mock).mockReturnValue(
     new Promise((done) => {

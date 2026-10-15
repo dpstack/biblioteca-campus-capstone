@@ -59,10 +59,10 @@ export function ThemeToggle() {
       type="button"
       className="theme-toggle"
       onClick={toggle}
-      aria-label="Tema oscuro"
+      aria-label="Dark theme"
       aria-pressed={theme === "dark"}
       title={
-        theme === "dark" ? "Cambiar a tema claro" : "Cambiar a tema oscuro"
+        theme === "dark" ? "Switch to light theme" : "Switch to dark theme"
       }
     >
       {theme === "dark" ? (

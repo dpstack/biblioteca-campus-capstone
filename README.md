@@ -1,69 +1,69 @@
-# Biblioteca Campus
+# Campus Library
 
-Aplicación de biblioteca universitaria desarrollada con **React, TypeScript y Vite**. Permite descubrir obras, consultar los ejemplares de la colección, gestionar préstamos y reservas y organizar una lista de lectura. Incluye un panel administrativo para mantener el inventario.
+A university library application built with **React, TypeScript, and Vite**. Discover books, check the library's own copies, manage loans and reservations, and organize a reading list. Authorized administrators can maintain the collection and review circulation.
 
-**[Aplicación en vivo](https://biblioteca-campus-capstone-dpstacks-projects.vercel.app/)** · **[Repositorio](https://github.com/dpstack/biblioteca-campus-capstone)** · **[Diapositivas](docs/presentation/Biblioteca-Campus-Demo-Final.pdf)** · **[Guion de demo](docs/DEMO_FINAL.md)**
+**[Live application](https://biblioteca-campus-capstone-dpstacks-projects.vercel.app/)** · **[Source repository](https://github.com/dpstack/biblioteca-campus-capstone)** · **[Presentation slides](docs/presentation/Biblioteca-Campus-Demo-Final.pdf)** · **[Demo script](docs/DEMO_FINAL.md)**
 
-Proyecto académico de Desarrollo Web, Jala University. El inventario es de demostración y no representa existencias de una universidad real.
+An academic Web Development capstone for Jala University. The demonstration inventory does not represent a real university's holdings. The interface, documentation, presentation, and demo script are in English. Existing repository and deployment identifiers remain unchanged.
 
-![Inicio de Biblioteca Campus](docs/screenshots/final-home-light-desktop.png)
+![Campus Library home page](docs/screenshots/final-home-light-desktop.png)
 
-## Contenido
+## Contents
 
-- [Funcionalidades](#funcionalidades)
-- [Tecnologías y arquitectura](#tecnologías-y-arquitectura)
-- [Instalación](#instalación)
-- [Configuración de Supabase](#configuración-de-supabase)
-- [Pruebas y compilación](#pruebas-y-compilación)
-- [Rutas y uso](#rutas-y-uso)
-- [Despliegue](#despliegue)
-- [Alcance y límites](#alcance-y-límites)
-- [Presentación y documentación](#presentación-y-documentación)
+- [Features](#features)
+- [Technology and architecture](#technology-and-architecture)
+- [Installation](#installation)
+- [Supabase setup](#supabase-setup)
+- [Testing and production build](#testing-and-production-build)
+- [Routes and usage](#routes-and-usage)
+- [Deployment](#deployment)
+- [Scope](#scope)
+- [Presentation and documentation](#presentation-and-documentation)
 
-## Funcionalidades
+## Features
 
-- Catálogo público de Open Library con búsqueda por título, autor o palabra clave, categorías, orden y páginas de 24 obras.
-- Filtro **Disponibles para préstamo**, aplicado al inventario activo antes de ordenar y paginar. Los filtros se conservan en la URL.
-- Fichas con portada, descripción, autores, temas y disponibilidad propia de la biblioteca.
-- Registro, confirmación de correo, inicio de sesión y cierre de sesión con Supabase Auth.
-- Préstamos de 14 días, devoluciones, historial, reservas con prioridad por turno y cancelación de reservas.
-- Estados de lectura **Quiero leer**, **Leyendo** y **Terminado**, con persistencia y eliminación.
-- Administración de obras, ejemplares y retiro/reactivación, con consulta de circulación para cuentas autorizadas.
-- Diseño móvil, navegación por teclado, foco visible, tema claro/oscuro y preferencia persistida en el navegador.
-- Mensajes de carga, errores recuperables y estados vacíos. La portada permite continuar al catálogo si no hay destacados.
+- Open Library catalog with title, author, and keyword search, categories, sorting, and pages of 24 works.
+- An **Available to borrow** filter applied to active inventory before sorting and pagination. Search filters remain in the URL.
+- Book details with cover, description, authors, subjects, and the library's own availability.
+- Registration, email confirmation, sign-in, and sign-out through Supabase Auth.
+- Fourteen-day loans, returns, history, reservations with queue priority, and cancellation.
+- Persistent **Want to read**, **Reading**, and **Finished** statuses, with removal from the reading list.
+- Administrative collection management, copy adjustments, retirement/reactivation, and circulation views.
+- Responsive layouts, keyboard navigation, visible focus, accessible labels, and persistent light/dark themes.
+- Loading, recoverable error, and empty states. The home page offers catalog navigation when no featured books are available.
 
-## Tecnologías y arquitectura
+## Technology and architecture
 
-| Capa                       | Tecnología y responsabilidad                                                   |
-| -------------------------- | ------------------------------------------------------------------------------ |
-| Interfaz                   | React 19, TypeScript, CSS y Lucide                                             |
-| Navegación                 | React Router, rutas personales protegidas y páginas cargadas de forma diferida |
-| Catálogo                   | Open Library Search y Works API                                                |
-| Identidad y datos propios  | Supabase Auth y PostgreSQL                                                     |
-| Reglas de préstamo         | Funciones SQL transaccionales, bloqueo de inventario y políticas RLS           |
-| Pruebas                    | Jest, React Testing Library, Playwright y axe                                  |
-| Construcción y alojamiento | Vite y Vercel                                                                  |
+| Layer                   | Technology and responsibility                                  |
+| ----------------------- | -------------------------------------------------------------- |
+| Interface               | React 19, TypeScript, CSS, and Lucide                          |
+| Routing                 | React Router, protected account routes, and lazy-loaded pages  |
+| Catalog                 | Open Library Search and Works APIs                             |
+| Identity and owned data | Supabase Auth and PostgreSQL                                   |
+| Borrowing rules         | Transactional SQL functions, inventory locks, and RLS policies |
+| Tests                   | Jest, React Testing Library, Playwright, and axe               |
+| Build and hosting       | Vite and Vercel                                                |
 
-Open Library proporciona metadatos. Supabase conserva usuarios, ejemplares y operaciones de la biblioteca. Ambas fuentes se relacionan por el identificador de obra, como `OL27448W`. Encontrar un título en Open Library no garantiza que pertenezca a la colección.
+Open Library supplies metadata. Supabase stores identity, physical copies, and library operations. A work identifier such as `OL27448W` connects the two sources. A title found in Open Library is not necessarily part of this library's collection.
 
 ```text
 src/
-  components/     Layout, tarjetas, controles y selector de tema
-  context/        Sesión compartida y hook useAuth
-  pages/          Inicio, catálogo, ficha, acceso, cuenta y administración
-  lib/            Servicios de Open Library y Supabase
+  components/     Shared layout, cards, controls, and theme toggle
+  context/        Shared session and useAuth
+  pages/          Home, catalog, book, login, account, and administration
+  lib/            API services and legacy server-error normalization
 supabase/
-  migrations/     Esquema y funciones de biblioteca y administración
-  tests/          Comprobaciones SQL con datos que se revierten
-tests/            Pruebas de navegador y tests/unit/
-docs/             Arquitectura, verificación, presentación y guion
+  migrations/     Library schema, permissions, and administrative functions
+  tests/          SQL checks inside transactions that roll back
+tests/            Browser tests and tests/unit/
+docs/             Architecture, verification, slides, and demo script
 ```
 
-Consulta [arquitectura y flujos](docs/ARCHITECTURE.md) para el detalle técnico.
+See [architecture and data flows](docs/ARCHITECTURE.md).
 
-## Instalación
+## Installation
 
-Requisitos: **Node.js 24.x**, npm y conexión a Internet para consultar los servicios externos.
+Requirements: **Node.js 24.x**, npm, and Internet access for external services.
 
 ```bash
 git clone https://github.com/dpstack/biblioteca-campus-capstone.git
@@ -72,35 +72,35 @@ npm ci
 cp .env.example .env.local
 ```
 
-Completa `.env.local` con la configuración de tu proyecto:
+Complete `.env.local` using your own Supabase project:
 
 ```dotenv
-VITE_SUPABASE_URL=https://TU-PROYECTO.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=TU_CLAVE_PUBLICABLE
+VITE_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
 ```
 
-La clave publicable identifica el proyecto. Los permisos del usuario dependen de su sesión y del servidor. **Nunca uses una clave secreta o `service_role` en variables `VITE_`.** `.env.local` está excluido de Git.
+The publishable key identifies the project. The session and server determine access permissions. **Never put a secret or `service_role` key in a `VITE_` variable.** Git ignores `.env.local`.
 
-Después de instalar el esquema de Supabase:
+After installing the Supabase schema:
 
 ```bash
 npm run dev
 ```
 
-Abre la URL que indique Vite, normalmente `http://localhost:5173`. Reinicia el servidor si cambias las variables. Sin Supabase, la aplicación ofrece el modo de exploración pública, pero no cuentas ni operaciones de préstamo.
+Open the URL printed by Vite, normally `http://localhost:5173`. Restart the server after changing environment variables. Without Supabase, the public catalog is available, while accounts and borrowing operations remain disconnected.
 
-## Configuración de Supabase
+## Supabase setup
 
-Para un proyecto nuevo, ejecuta en SQL Editor las migraciones completas **en este orden**:
+For a new project, run these complete migrations in SQL Editor **in order**:
 
-1. [`20261006_initial_library.sql`](supabase/migrations/20261006_initial_library.sql): inventario de ejemplo, préstamos, reservas, lectura, RLS y funciones base.
-2. [`20261009_admin.sql`](supabase/migrations/20261009_admin.sql): roles administrativos, metadatos y retiro de obras y funciones del panel.
+1. [`20261006_initial_library.sql`](supabase/migrations/20261006_initial_library.sql): demonstration stock, loans, reservations, reading lists, RLS, and base functions.
+2. [`20261009_admin.sql`](supabase/migrations/20261009_admin.sql): administrative roles, work metadata, retirement, and panel functions.
 
-En una base existente, comprueba qué migraciones ya se aplicaron antes de repetir la instalación. La aplicación React no ejecuta migraciones.
+Check which migrations are already installed before applying them to an existing database. React does not run migrations. The original applied migrations retain their historical server messages; the frontend normalizes those known messages to English without changing their business rules.
 
-Habilita el proveedor Email en Supabase Auth. Configura **Site URL** con la URL pública de tu despliegue y permite las URLs de redirección que utilices, incluida la local para desarrollo. Crea y confirma la cuenta desde `/acceso`. La demostración en vivo debe utilizar una cuenta ya confirmada para evitar depender de la entrega de correo durante la exposición.
+Enable the Email provider in Supabase Auth. Set **Site URL** to your public deployment and allow the authentication redirect URLs you use, including the local development origin. Register and confirm an account through `/login`. Prepare a confirmed account before a live demonstration so the presentation does not depend on email delivery.
 
-Para asignar administración a una cuenta existente, ejecuta desde SQL Editor, sustituyendo el correo:
+Assign administration to an existing account from SQL Editor, replacing the example address:
 
 ```sql
 insert into public.library_admins (user_id)
@@ -109,15 +109,15 @@ where lower(email) = lower('admin@example.com')
 on conflict do nothing;
 ```
 
-Recarga la sesión para mostrar Administración. Los usuarios comunes no pueden asignarse roles ni escribir directamente en inventario. Consulta [administración](docs/ADMINISTRATION.md) para instalación, revocación y demostración.
+Refresh the session to display Administration. Regular users cannot assign themselves roles or write inventory directly. See [administration](docs/ADMINISTRATION.md).
 
-### Autenticación y autorización
+### Authentication and authorization
 
-Supabase Auth devuelve un access token JWT y un refresh token. El SDK conserva y renueva la sesión y envía `Authorization: Bearer <token>` al backend REST. `AuthProvider` comparte la sesión y mantiene un estado de carga mientras se restaura, antes de resolver las rutas personales.
+Supabase Auth returns a JWT access token and a refresh token. The SDK persists and renews the session and sends `Authorization: Bearer <token>` to the REST backend. `AuthProvider` shares the session and keeps protected pages loading until session restoration completes.
 
-RLS limita los datos personales a su propietario. Las funciones SQL verifican identidad, permisos, ejemplares y turnos antes de modificar existencias. Cerrar sesión elimina la sesión local y revoca los refresh tokens según el comportamiento del SDK. Los access tokens ya emitidos pueden ser válidos hasta su expiración. La persistencia en localStorage requiere mantener la prevención de XSS y evitar scripts no confiables.
+RLS limits personal rows to their owner. SQL functions check identity, role, copies, and reservation priority before changing inventory. Sign-out removes the local session and revokes refresh tokens according to SDK behavior. Existing access tokens can remain valid until expiration. localStorage persistence requires XSS prevention and avoiding untrusted scripts.
 
-## Pruebas y compilación
+## Testing and production build
 
 ```bash
 npm test
@@ -126,23 +126,23 @@ npm run lint
 npm run build
 ```
 
-Las pruebas Jest usan respuestas HTTP simuladas y no requieren credenciales ni Internet. La cobertura se limita a los archivos configurados en Jest y no representa cobertura total del producto.
+Jest uses mocked HTTP responses and needs neither credentials nor Internet access. Coverage includes only the files configured in Jest, rather than the whole product.
 
-Para las pruebas de navegador:
+For browser tests:
 
 ```bash
 npx playwright install chromium
 npm run test:e2e
 ```
 
-Playwright inicia Vite automáticamente. Los recorridos públicos consultan Open Library y los casos de inventario real requieren Supabase configurado. También hay casos con HTTP simulado para comprobar permisos e interacciones sin modificar datos reales. Para usar Chrome instalado en PowerShell:
+Playwright starts Vite automatically. Public flows use Open Library. Real inventory scenarios require configured Supabase variables; other scenarios simulate HTTP without modifying real user data. To use installed Chrome in PowerShell:
 
 ```powershell
 $env:PLAYWRIGHT_CHANNEL='chrome'
 npm run test:e2e
 ```
 
-Para repetir contra el despliegue público:
+To test the public deployment:
 
 ```powershell
 $env:BASE_URL='https://biblioteca-campus-capstone-dpstacks-projects.vercel.app'
@@ -150,79 +150,81 @@ $env:PLAYWRIGHT_CHANNEL='chrome'
 npm run test:e2e
 ```
 
-Las suites [`library_flows.sql`](supabase/tests/library_flows.sql) y [`admin_flows.sql`](supabase/tests/admin_flows.sql) se ejecutan completas en SQL Editor de un proyecto de prueba con ambas migraciones. Crean identidades y obras sintéticas dentro de una transacción y terminan en `ROLLBACK`. No ejecutes fragmentos fuera de esa transacción.
+Run [`library_flows.sql`](supabase/tests/library_flows.sql) and [`admin_flows.sql`](supabase/tests/admin_flows.sql) in full in SQL Editor of a test project with both migrations installed. They create synthetic identities and works inside a transaction ending in `ROLLBACK`. Keep the transaction intact.
 
-[La verificación de entrega](docs/LAB_SEMANA_7.md) distingue resultados actuales, pruebas SQL realizadas anteriormente y comprobaciones humanas pendientes. [TESTING.md](docs/TESTING.md) conserva el alcance y los comandos.
+[The final lab report](docs/LAB_SEMANA_7.md) distinguishes current browser checks from historical SQL and manual checks. [Testing documentation](docs/TESTING.md) explains the scope and commands.
 
-Para comprobar el paquete de producción local:
+To inspect a production build locally:
 
 ```bash
 npm run build
 npm run preview
 ```
 
-## Rutas y uso
+## Routes and usage
 
-| Ruta                    | Función                                               |
-| ----------------------- | ----------------------------------------------------- |
-| `/`                     | Inicio y búsqueda rápida                              |
-| `/catalogo`             | Búsqueda, filtros, orden y paginación                 |
-| `/catalogo?available=1` | Obras activas con ejemplares disponibles              |
-| `/libro/:workId`        | Ficha y acciones de lectura, préstamo o reserva       |
-| `/acceso`               | Registro e inicio de sesión                           |
-| `/mi-biblioteca`        | Préstamos, historial, reservas y lectura de la cuenta |
-| `/administracion`       | Gestión y circulación para administradores            |
+| Route                  | Purpose                                                      |
+| ---------------------- | ------------------------------------------------------------ |
+| `/`                    | Home and quick search                                        |
+| `/catalog`             | Search, filters, sorting, and pagination                     |
+| `/catalog?available=1` | Active works with available copies                           |
+| `/books/:workId`       | Work details and reading, loan, or reservation actions       |
+| `/login`               | Registration and sign-in                                     |
+| `/my-library`          | The account's loans, history, reservations, and reading list |
+| `/admin`               | Collection and circulation management for administrators     |
 
-### Recorrido del lector
+The original `/catalogo`, `/libro/:workId`, `/acceso`, `/mi-biblioteca`, and `/administracion` links redirect to their English equivalents. Search parameters are preserved.
 
-1. Activa **Disponibles para préstamo** y abre una obra de la colección.
-2. Inicia sesión y pulsa **Solicitar préstamo** si hay disponibilidad y tu turno lo permite.
-3. Revisa el vencimiento y devuelve el ejemplar desde **Mi biblioteca**. El historial conserva la operación.
-4. Si no quedan ejemplares, solicita una reserva y consulta o cancela su turno.
-5. Guarda y recupera el estado de lectura desde la ficha o la cuenta.
+### Reader flow
 
-El administrador puede incorporar una obra desde Open Library, definir el total de ejemplares y retirarla de nuevos préstamos. El servidor conserva los préstamos y admite devoluciones de obras retiradas. Las reservas pendientes impiden retirar una obra.
+1. Enable **Available to borrow** and open a work in the collection.
+2. Sign in and select **Borrow book** when inventory and queue priority allow it.
+3. Check the due date and return the copy from **My library**. History preserves the operation.
+4. When all copies are on loan, reserve the work and view or cancel the reservation.
+5. Save and restore a reading status from the work page or account.
 
-El botón de sol/luna sigue inicialmente el sistema y recuerda una elección explícita con `biblioteca-theme-v1` en localStorage. DM Sans se usa para controles y texto, y Playfair Display para encabezados y títulos de obras.
+Administrators can add a work from Open Library, set total copies, and retire it from new operations. Existing loans and returns remain supported. Pending reservations prevent retirement.
 
-## Despliegue
+The sun/moon button initially follows the system and persists an explicit choice using `biblioteca-theme-v1` in localStorage. DM Sans supports body text and controls; Playfair Display supports headings and book titles. Dates, number formatting, author collation, and the Open Library language preference use English. Original book titles and metadata remain as supplied by Open Library.
 
-La versión pública está alojada en **Vercel**, con HTTPS y reescritura de rutas SPA en `vercel.json`.
+## Deployment
 
-Para desplegar tu propia instalación:
+The public application uses **Vercel**, HTTPS, and SPA rewrites in `vercel.json`.
 
-1. Importa el repositorio en Vercel y elige **Vite** como framework.
-2. Utiliza **Node.js 24.x**, `npm run build` y directorio de salida `dist`.
-3. Configura `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` para el entorno de destino.
-4. Instala las migraciones en el proyecto Supabase y configura las URLs permitidas de autenticación.
-5. Despliega y verifica el catálogo, una ruta anidada, acceso, inventario y cuenta.
+For your own installation:
 
-Las variables `VITE_` se incorporan al construir el frontend: un cambio requiere otro build y despliegue. No es necesario incluir `.env.local` en el repositorio.
+1. Import the repository into Vercel and select **Vite**.
+2. Use **Node.js 24.x**, build command `npm run build`, and output directory `dist`.
+3. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` for the target environment.
+4. Install the Supabase migrations and configure permitted authentication URLs.
+5. Deploy and check catalog, nested routes, login, inventory, and account behavior.
 
-## Alcance y límites
+Vite embeds `VITE_` variables at build time. Changing them requires another build and deployment. Do not commit `.env.local`.
 
-- Aplicación académica con inventario de demostración, no un servicio institucional validado para operación real.
-- **Autor A–Z** ordena búsquedas completas de hasta 200 obras. Las mayores requieren afinar filtros. Fecha y popularidad usan el orden de Open Library.
-- El filtro de préstamo consulta existencias actuales. El servidor vuelve a validar disponibilidad y turnos al solicitar el préstamo.
-- La búsqueda administrativa devuelve hasta 24 resultados. Los roles se asignan desde SQL Editor.
-- Open Library puede omitir portadas, autores o descripciones. Sus interrupciones afectan la exploración externa.
-- Las reservas no generan notificaciones automáticas ni asignación automática del ejemplar devuelto.
-- Axe y las pruebas de teclado no equivalen a una certificación de accesibilidad. Falta revisión humana con lector de pantalla.
-- Las mediciones sintéticas de rendimiento anteriores muestran oportunidades de mejora bajo red y CPU limitadas. Conservan su fecha y procedencia en [PERFORMANCE.md](docs/PERFORMANCE.md).
+## Scope
 
-## Presentación y documentación
+- Academic application with demonstration inventory, rather than an institutional service validated for real operations.
+- **Author A–Z** sorts complete searches of up to 200 works. Refine larger searches. Date and popularity sorting use Open Library.
+- Availability is a snapshot. The server checks copies and queue priority again when processing a loan.
+- Administrative searches return up to 24 works. Database administrators assign roles through SQL Editor.
+- Open Library may omit metadata or become unavailable. Original titles are preserved in their source language.
+- Reservations enforce queue priority without automatic email notifications or automatic copy assignment.
+- Axe and keyboard checks are not a complete accessibility certification.
+- Historical synthetic performance results retain their original dates and provenance in [PERFORMANCE.md](docs/PERFORMANCE.md).
 
-- [Diapositivas de la demo en PDF](docs/presentation/Biblioteca-Campus-Demo-Final.pdf)
-- [Guion, preparación de cuentas y plan alternativo](docs/DEMO_FINAL.md)
-- [Entrega del laboratorio final y revisión entre pares](docs/LAB_SEMANA_7.md)
-- [Arquitectura](docs/ARCHITECTURE.md), [pruebas](docs/TESTING.md), [accesibilidad](docs/ACCESSIBILITY.md) y [administración](docs/ADMINISTRATION.md)
-- [Laboratorio Semana 6](docs/LAB_SEMANA_6.md), conservado como evidencia histórica
+## Presentation and documentation
 
-## Autoría y fuentes
+- [Eight-slide presentation](docs/presentation/Biblioteca-Campus-Demo-Final.pdf)
+- [Demo script and rehearsal worksheet](docs/DEMO_FINAL.md)
+- [Final lab report](docs/LAB_SEMANA_7.md)
+- [Architecture](docs/ARCHITECTURE.md), [testing](docs/TESTING.md), [accessibility](docs/ACCESSIBILITY.md), and [administration](docs/ADMINISTRATION.md)
+- [Historical Week 6 lab](docs/LAB_SEMANA_6.md)
 
-Proyecto de [dpstack](https://github.com/dpstack) para Desarrollo Web en Jala University. Metadatos y portadas de Open Library.
+## Credits
+
+A project by [dpstack](https://github.com/dpstack) for Web Development at Jala University. Metadata and book covers come from Open Library.
 
 - [Open Library Search API](https://openlibrary.org/dev/docs/api/search)
 - [Supabase Auth](https://supabase.com/docs/guides/auth/quickstarts/react)
-- [Supabase Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security)
-- [Funciones de PostgreSQL en Supabase](https://supabase.com/docs/guides/database/functions)
+- [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security)
+- [Supabase database functions](https://supabase.com/docs/guides/database/functions)

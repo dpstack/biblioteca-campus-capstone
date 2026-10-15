@@ -25,29 +25,29 @@ function show(overrides = {}, copies?: number) {
     </MemoryRouter>,
   );
 }
-test("permite abrir la ficha y muestra autor y disponibilidad", () => {
+test("opens book details and shows author and availability", () => {
   show({}, 1);
   expect(
-    screen.getByRole("link", { name: "Ver detalles de El campus" }),
-  ).toHaveAttribute("href", "/libro/OL1W");
+    screen.getByRole("link", { name: "View details of El campus" }),
+  ).toHaveAttribute("href", "/books/OL1W");
   expect(screen.getByText("Ana")).toBeInTheDocument();
-  expect(screen.getByText("Disponible")).toBeInTheDocument();
+  expect(screen.getByText("Available")).toBeInTheDocument();
 });
-test("distingue un libro prestado de metadatos sin inventario", () => {
+test("distinguishes an on-loan book from metadata without inventory", () => {
   const { unmount } = show({}, 0);
-  expect(screen.getByText("En préstamo")).toBeInTheDocument();
+  expect(screen.getByText("On loan")).toBeInTheDocument();
   unmount();
   show({ authors: [], firstPublishYear: null });
-  expect(screen.getByText("Autor no indicado")).toBeInTheDocument();
-  expect(screen.getByText(/Edición sin fecha/)).toBeInTheDocument();
-  expect(screen.queryByText("Disponible")).not.toBeInTheDocument();
+  expect(screen.getByText("Unknown author")).toBeInTheDocument();
+  expect(screen.getByText(/Publication date unavailable/)).toBeInTheDocument();
+  expect(screen.queryByText("Available")).not.toBeInTheDocument();
 });
-test("una portada rota no impide consultar el libro", () => {
+test("a broken cover does not prevent viewing the book", () => {
   show();
   fireEvent.error(screen.getByRole("img"));
   expect(screen.queryByRole("img")).not.toBeInTheDocument();
-  expect(screen.getByRole("link", { name: "Ver libro" })).toHaveAttribute(
+  expect(screen.getByRole("link", { name: "View book" })).toHaveAttribute(
     "href",
-    "/libro/OL1W",
+    "/books/OL1W",
   );
 });

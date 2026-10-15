@@ -4,30 +4,30 @@ import { loadEnv } from "vite";
 const publicEnv = loadEnv("development", process.cwd(), "VITE_");
 const catalogPath =
   publicEnv.VITE_SUPABASE_URL && publicEnv.VITE_SUPABASE_PUBLISHABLE_KEY
-    ? "/catalogo?available=1"
-    : "/catalogo?q=Tolkien";
+    ? "/catalog?available=1"
+    : "/catalog?q=Tolkien";
 
-test("tema oscuro: teclado, persistencia, navegación y contraste", async ({
+test("dark theme: keyboard, persistence, navigation, and contrast", async ({
   page,
 }, info) => {
   test.setTimeout(120000);
   await page.emulateMedia({ colorScheme: "light" });
   await page.goto("/");
-  const toggle = page.getByRole("button", { name: "Tema oscuro" });
+  const toggle = page.getByRole("button", { name: "Dark theme" });
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
   await toggle.focus();
   await page.keyboard.press("Enter");
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
   await page.reload();
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
-  for (const path of ["/", catalogPath, "/libro/OL27448W", "/acceso"]) {
+  for (const path of ["/", catalogPath, "/books/OL27448W", "/login"]) {
     await page.goto(path);
     await expect(page.getByRole("heading").first()).toBeVisible();
-    if (path.includes("catalogo"))
+    if (path.includes("catalog"))
       await expect(page.locator(".book-grid article").first()).toBeVisible({
         timeout: 30000,
       });
-    if (path.includes("libro"))
+    if (path.includes("books"))
       await expect(
         page.getByRole("heading", { name: "The Lord of the Rings" }),
       ).toBeVisible({ timeout: 30000 });
@@ -44,7 +44,7 @@ test("tema oscuro: teclado, persistencia, navegación y contraste", async ({
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
-    if (path === "/" || path.includes("catalogo"))
+    if (path === "/" || path.includes("catalog"))
       await page.screenshot({
         path: `docs/screenshots/theme-dark-${path === "/" ? "home" : "catalog"}-${info.project.name}.png`,
         fullPage: true,
@@ -56,7 +56,7 @@ test("tema oscuro: teclado, persistencia, navegación y contraste", async ({
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
 });
 
-test("tema del sistema: cambios automáticos y preferencia previa al contenido", async ({
+test("system theme: automatic changes and preference before content", async ({
   page,
 }) => {
   await page.emulateMedia({ colorScheme: "dark" });
@@ -71,7 +71,7 @@ test("tema del sistema: cambios automáticos y preferencia previa al contenido",
     observer.observe(document, { childList: true, subtree: true });
   });
   await page.goto("/");
-  const toggle = page.getByRole("button", { name: "Tema oscuro" });
+  const toggle = page.getByRole("button", { name: "Dark theme" });
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
   expect(await page.evaluate(() => (window as any).firstContentTheme)).toBe(
     "dark",

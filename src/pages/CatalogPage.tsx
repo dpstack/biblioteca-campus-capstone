@@ -12,12 +12,12 @@ import { searchBooks } from "../lib/openLibrary";
 import type { Book, InventoryItem } from "../types";
 
 const categories = [
-  { value: "", label: "Todos" },
-  { value: "fiction", label: "Ficción" },
-  { value: "science", label: "Ciencia" },
-  { value: "history", label: "Historia" },
-  { value: "art", label: "Arte" },
-  { value: "technology", label: "Tecnología" },
+  { value: "", label: "All" },
+  { value: "fiction", label: "Fiction" },
+  { value: "science", label: "Science" },
+  { value: "history", label: "History" },
+  { value: "art", label: "Art" },
+  { value: "technology", label: "Technology" },
 ];
 
 type SortOrder = "relevance" | "newest" | "oldest" | "author" | "popularity";
@@ -73,7 +73,7 @@ function CatalogContent() {
       const { getAvailableInventory } = await import("../lib/library");
       const stock = await getAvailableInventory(controller.signal);
       if (controller.signal.aborted)
-        throw new DOMException("Búsqueda cancelada", "AbortError");
+        throw new DOMException("Search canceled", "AbortError");
       setInventory(
         Object.fromEntries(stock.map((item) => [item.work_id, item])),
       );
@@ -109,7 +109,7 @@ function CatalogContent() {
             setInventoryError(
               cause instanceof Error
                 ? cause.message
-                : "No se pudo consultar la disponibilidad.",
+                : "Availability could not be retrieved.",
             );
           }
         }
@@ -119,7 +119,7 @@ function CatalogContent() {
           setError(
             cause instanceof Error
               ? cause.message
-              : "No se pudo cargar el catálogo.",
+              : "The catalog could not be loaded.",
           );
       })
       .finally(() => {
@@ -145,19 +145,19 @@ function CatalogContent() {
     <div className="catalog-page">
       <section className="page-intro">
         <div className="container">
-          <span className="eyebrow">NUESTRO CATÁLOGO</span>
-          <h1>Encuentra tu próxima lectura</h1>
+          <span className="eyebrow">OUR CATALOG</span>
+          <h1>Find your next read</h1>
           <p>
-            Busca entre los metadatos de Open Library por título, autor o tema y
-            descubre nuevas ideas.
+            Search Open Library by title, author, or subject and discover new
+            ideas.
           </p>
         </div>
       </section>
       <div className="container catalog-layout">
-        <aside className="catalog-sidebar" aria-label="Filtros de búsqueda">
+        <aside className="catalog-sidebar" aria-label="Search filters">
           <div className="sidebar-title">
             <ListFilter size={19} />
-            <h2>Filtrar por</h2>
+            <h2>Filter by</h2>
           </div>
           <label className="availability-filter">
             <input
@@ -170,12 +170,12 @@ function CatalogContent() {
                 })
               }
             />
-            <span>Disponibles para préstamo</span>
+            <span>Available to borrow</span>
           </label>
           <p className="availability-help">
-            Obras de la biblioteca con ejemplares disponibles.
+            Library works with copies available to borrow.
           </p>
-          <h3>Categoría</h3>
+          <h3>Category</h3>
           <div className="category-list">
             {categories.map((item) => (
               <button
@@ -190,27 +190,25 @@ function CatalogContent() {
             ))}
           </div>
           <div className="sidebar-note">
-            <strong>¿Buscas un libro específico?</strong>
-            <p>
-              Usa la búsqueda por título o autor para resultados más precisos.
-            </p>
+            <strong>Looking for a specific book?</strong>
+            <p>Search by title or author for more precise results.</p>
           </div>
         </aside>
         <div className="catalog-main">
           <form className="catalog-search" onSubmit={onSearch} role="search">
             <Search size={20} aria-hidden="true" />
             <label className="sr-only" htmlFor="catalog-query">
-              Término de búsqueda
+              Search term
             </label>
             <input
               id="catalog-query"
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
-              placeholder="Buscar libros, autores o palabras clave"
+              placeholder="Search books, authors, or keywords"
               maxLength={120}
             />
             <label className="sr-only" htmlFor="search-field">
-              Buscar por
+              Search by
             </label>
             <select
               id="search-field"
@@ -219,31 +217,31 @@ function CatalogContent() {
                 updateParams({ field: event.target.value, page: "" })
               }
             >
-              <option value="keyword">Palabra clave</option>
-              <option value="title">Título</option>
-              <option value="author">Autor</option>
+              <option value="keyword">Keyword</option>
+              <option value="title">Title</option>
+              <option value="author">Author</option>
             </select>
-            <button type="submit">Buscar</button>
+            <button type="submit">Search</button>
           </form>
           <div className="catalog-toolbar">
             <div>
-              <span className="eyebrow">EXPLORAR</span>
+              <span className="eyebrow">EXPLORE</span>
               <h2>
                 {term
-                  ? `Resultados para “${term}”`
+                  ? `Results for “${term}”`
                   : category
                     ? categories.find((item) => item.value === category)?.label
-                    : "Todos los libros"}
+                    : "All books"}
               </h2>
               <p>
                 {loading
-                  ? "Buscando…"
-                  : `${total.toLocaleString("es")} obras encontradas`}
+                  ? "Searching…"
+                  : `${total.toLocaleString("en")} works found`}
               </p>
             </div>
             <label className="sort-control">
               <SlidersHorizontal size={17} />
-              <span>Ordenar:</span>
+              <span>Sort by:</span>
               <select
                 value={sort}
                 onChange={(event) =>
@@ -256,18 +254,19 @@ function CatalogContent() {
                   })
                 }
               >
-                <option value="relevance">Relevancia</option>
-                <option value="newest">Más recientes</option>
-                <option value="oldest">Más antiguos</option>
-                <option value="author">Autor A–Z (hasta 200 obras)</option>
-                <option value="popularity">Más populares</option>
+                <option value="relevance">Relevance</option>
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="author">Author A–Z (up to 200 works)</option>
+                <option value="popularity">Most popular</option>
               </select>
             </label>
           </div>
           {sort === "author" && (
             <p className="sort-explainer">
-              Autor A–Z ordena toda la búsqueda cuando hay 200 obras o menos.
-              Para búsquedas mayores, afina los filtros o elige otro orden.
+              Author A–Z sorts the full search when it contains 200 works or
+              fewer. For larger searches, refine your filters or choose another
+              sort order.
             </p>
           )}
           {error && (
@@ -282,13 +281,13 @@ function CatalogContent() {
                   setRetry((value) => value + 1);
                 }}
               >
-                Reintentar
+                Retry
               </button>
             </div>
           )}
           {inventoryError && !error && (
             <div className="inline-message error" role="alert">
-              Catálogo disponible, pero no se pudo consultar el inventario:{" "}
+              The catalog is available, but inventory could not be retrieved:{" "}
               {inventoryError}
             </div>
           )}
@@ -296,7 +295,7 @@ function CatalogContent() {
             <div
               className="book-grid"
               role="status"
-              aria-label="Cargando catálogo"
+              aria-label="Loading catalog"
             >
               {Array.from({ length: 8 }, (_, index) => (
                 <div className="book-skeleton" key={index} />
@@ -306,18 +305,18 @@ function CatalogContent() {
           {!loading && !error && books.length === 0 && (
             <div className="empty-state">
               <BookOpenIcon />
-              <h3>Sin resultados por ahora</h3>
+              <h3>No results yet</h3>
               <p>
                 {availableOnly
-                  ? "No hay obras disponibles que coincidan. Cambia la búsqueda o desactiva el filtro de préstamo."
-                  : "Prueba otra palabra clave o selecciona una categoría diferente."}
+                  ? "No available works match your search. Change your search or turn off the borrowing filter."
+                  : "Try another keyword or select a different category."}
               </p>
               <button
                 className="button button-primary"
                 type="button"
                 onClick={() => setParams({})}
               >
-                Borrar filtros
+                Clear filters
               </button>
             </div>
           )}
@@ -338,17 +337,17 @@ function CatalogContent() {
                   disabled={page === 1}
                   onClick={() => updateParams({ page: String(page - 1) })}
                 >
-                  <ArrowLeft size={17} /> Anterior
+                  <ArrowLeft size={17} /> Previous
                 </button>
                 <span>
-                  Página {page} de {Math.max(1, Math.ceil(total / 24))}
+                  Page {page} of {Math.max(1, Math.ceil(total / 24))}
                 </span>
                 <button
                   type="button"
                   disabled={page * 24 >= total}
                   onClick={() => updateParams({ page: String(page + 1) })}
                 >
-                  Siguiente <ArrowRight size={17} />
+                  Next <ArrowRight size={17} />
                 </button>
               </div>
             </>

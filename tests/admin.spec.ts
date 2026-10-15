@@ -2,12 +2,12 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { loadEnv } from "vite";
 const env = loadEnv("development", process.cwd(), "VITE_");
-test("administración: añadir, editar, retirar y consultar circulación (API simulada)", async ({
+test("administration: add, edit, retire, and review circulation (mock API)", async ({
   page,
 }, info) => {
   test.skip(
     !env.VITE_SUPABASE_URL,
-    "Se requiere configuración pública Supabase para cargar el SDK.",
+    "Public Supabase configuration is required to load the SDK.",
   );
   const url = env.VITE_SUPABASE_URL;
   const user = {
@@ -58,7 +58,7 @@ test("administración: añadir, editar, retirar y consultar circulación (API si
             {
               id: "loan",
               work_id: "OL1W",
-              title: "Obra prestada",
+              title: "Borrowed work",
               email: "reader@example.invalid",
               due_at: "2026-10-23",
             },
@@ -67,7 +67,7 @@ test("administración: añadir, editar, retirar y consultar circulación (API si
             {
               id: "reservation",
               work_id: "OL1W",
-              title: "Obra prestada",
+              title: "Borrowed work",
               email: "next@example.invalid",
               created_at: "2026-10-09",
             },
@@ -101,7 +101,7 @@ test("administración: añadir, editar, retirar y consultar circulación (API si
         docs: [
           {
             key: "/works/OL2W",
-            title: "Nueva obra",
+            title: "New work",
             author_name: ["Eva"],
             edition_count: 1,
           },
@@ -109,25 +109,27 @@ test("administración: añadir, editar, retirar y consultar circulación (API si
       },
     }),
   );
-  await page.goto("/administracion");
+  await page.goto("/admin");
   await expect(
-    page.getByRole("heading", { name: "Añadir desde Open Library" }),
+    page.getByRole("heading", { name: "Add from Open Library" }),
   ).toBeVisible();
-  await page.getByLabel("Título, autor o palabra clave").fill("Nueva obra");
-  await page.getByRole("button", { name: "Buscar libros" }).click();
-  await page.getByRole("button", { name: "Gestionar OL2W" }).click();
-  await page.getByLabel("Total de ejemplares").fill("3");
-  await page.getByRole("button", { name: "Guardar inventario" }).click();
-  await expect(page.getByText("3 disponibles de 3 · Activa")).toBeVisible();
-  await page.getByRole("button", { name: "Editar OL2W" }).click();
-  await page.getByLabel("Retirar de nuevos préstamos y reservas").check();
-  await page.getByRole("button", { name: "Guardar inventario" }).click();
-  await expect(page.getByText("3 disponibles de 3 · Retirada")).toBeVisible();
+  await page.getByLabel("Title, author, or keyword").fill("New work");
+  await page.getByRole("button", { name: "Search books" }).click();
+  await page.getByRole("button", { name: "Manage OL2W" }).click();
+  await page.getByLabel("Total copies").fill("3");
+  await page.getByRole("button", { name: "Save inventory" }).click();
+  await expect(page.getByText("3 available out of 3 · Active")).toBeVisible();
+  await page.getByRole("button", { name: "Edit OL2W" }).click();
+  await page.getByLabel("Retire from new loans and reservations").check();
+  await page.getByRole("button", { name: "Save inventory" }).click();
+  await expect(page.getByText("3 available out of 3 · Retired")).toBeVisible();
   await expect(page.getByText("reader@example.invalid")).toBeVisible();
-  await expect(page.getByText(/next@example.invalid · Turno 1/)).toBeVisible();
-  await page.getByRole("button", { name: "Tema oscuro" }).click();
   await expect(
-    page.getByRole("button", { name: "Tema oscuro" }),
+    page.getByText(/next@example.invalid · Position 1/),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Dark theme" }).click();
+  await expect(
+    page.getByRole("button", { name: "Dark theme" }),
   ).toHaveAttribute("aria-pressed", "true");
   expect(
     (
@@ -145,12 +147,10 @@ test("administración: añadir, editar, retirar y consultar circulación (API si
     path: `docs/screenshots/admin-dark-fixture-${info.project.name}.png`,
     fullPage: true,
   });
-  await page.goto("/mi-biblioteca");
+  await page.goto("/my-library");
+  await expect(page.getByRole("heading", { name: "My library" })).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Mi biblioteca" }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Tema oscuro" }),
+    page.getByRole("button", { name: "Dark theme" }),
   ).toHaveAttribute("aria-pressed", "true");
   expect(
     (
@@ -160,10 +160,10 @@ test("administración: añadir, editar, retirar y consultar circulación (API si
     ).violations,
   ).toEqual([]);
 });
-test("administración: sesión normal no recibe datos ni editor (API simulada)", async ({
+test("administration: a regular session receives no data or editor (mock API)", async ({
   page,
 }) => {
-  test.skip(!env.VITE_SUPABASE_URL, "Supabase público no configurado.");
+  test.skip(!env.VITE_SUPABASE_URL, "Public Supabase is not configured.");
   const url = env.VITE_SUPABASE_URL;
   const exp = Math.floor(Date.now() / 1000) + 3600;
   const user = {
@@ -193,16 +193,16 @@ test("administración: sesión normal no recibe datos ni editor (API simulada)",
     route.request().url().includes("admin_dashboard")
       ? route.fulfill({
           status: 403,
-          json: { message: "Acceso exclusivo para administradores." },
+          json: { message: "Login exclusivo para administradores." },
         })
       : route.fulfill({ json: false }),
   );
-  await page.goto("/administracion");
+  await page.goto("/admin");
   await expect(page.getByRole("alert")).toContainText("exclusivo");
-  await expect(page.getByRole("button", { name: "Buscar libros" })).toHaveCount(
+  await expect(page.getByRole("button", { name: "Search books" })).toHaveCount(
     0,
   );
   await expect(
-    page.getByRole("link", { name: "Administración", exact: true }),
+    page.getByRole("link", { name: "Administration", exact: true }),
   ).toHaveCount(0);
 });

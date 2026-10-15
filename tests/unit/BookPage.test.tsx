@@ -23,9 +23,9 @@ function show(session: any = { user: { id: "student" } }) {
     <AuthContext.Provider
       value={{ session, isLoading: false, signOut: jest.fn() }}
     >
-      <MemoryRouter initialEntries={["/libro/OL1W"]}>
+      <MemoryRouter initialEntries={["/books/OL1W"]}>
         <Routes>
-          <Route path="/libro/:workId" element={<BookPage />} />
+          <Route path="/books/:workId" element={<BookPage />} />
         </Routes>
       </MemoryRouter>
     </AuthContext.Provider>,
@@ -37,7 +37,7 @@ beforeEach(() => {
     title: "Campus",
     authors: ["Ana"],
     coverId: null,
-    subjects: ["Ficción"],
+    subjects: ["Fiction"],
     description: "Una biblioteca",
     firstPublishDate: null,
   });
@@ -48,7 +48,7 @@ beforeEach(() => {
   (library.borrowBook as jest.Mock).mockResolvedValue(undefined);
   (library.reserveBook as jest.Mock).mockResolvedValue(undefined);
 });
-test("solicita un préstamo y actualiza la disponibilidad", async () => {
+test("requests a loan and updates availability", async () => {
   (library.getInventory as jest.Mock)
     .mockResolvedValueOnce([
       { work_id: "OL1W", total_copies: 1, available_copies: 1 },
@@ -58,47 +58,39 @@ test("solicita un préstamo y actualiza la disponibilidad", async () => {
     ]);
   const user = userEvent.setup();
   show();
-  await user.click(
-    await screen.findByRole("button", { name: "Solicitar préstamo" }),
-  );
-  expect(await screen.findByText(/Préstamo registrado/)).toBeInTheDocument();
+  await user.click(await screen.findByRole("button", { name: "Borrow book" }));
+  expect(await screen.findByText(/Loan registered/)).toBeInTheDocument();
   expect(library.borrowBook).toHaveBeenCalledWith({
     work_id: "OL1W",
     title: "Campus",
     author: "Ana",
     cover_id: null,
   });
-  expect(
-    await screen.findByText("Todos los ejemplares prestados"),
-  ).toBeInTheDocument();
+  expect(await screen.findByText("All copies are on loan")).toBeInTheDocument();
 });
-test("reserva una obra agotada y muestra confirmación", async () => {
+test("reserves an unavailable work and shows confirmation", async () => {
   (library.getInventory as jest.Mock).mockResolvedValue([
     { work_id: "OL1W", total_copies: 1, available_copies: 0 },
   ]);
   const user = userEvent.setup();
   show();
-  await user.click(
-    await screen.findByRole("button", { name: "Reservar libro" }),
-  );
-  expect(await screen.findByText(/Reserva registrada/)).toBeInTheDocument();
+  await user.click(await screen.findByRole("button", { name: "Reserve book" }));
+  expect(await screen.findByText(/Reservation registered/)).toBeInTheDocument();
   expect(library.reserveBook).toHaveBeenCalled();
 });
-test("un rechazo de la cola se comunica sin fingir un préstamo", async () => {
+test("reports a queue rejection without claiming a successful loan", async () => {
   (library.borrowBook as jest.Mock).mockRejectedValue(
     new Error("Reservado para otra persona"),
   );
   const user = userEvent.setup();
   show();
-  await user.click(
-    await screen.findByRole("button", { name: "Solicitar préstamo" }),
-  );
+  await user.click(await screen.findByRole("button", { name: "Borrow book" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "Reservado para otra persona",
   );
-  expect(screen.queryByText(/Préstamo registrado/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/Loan registered/)).not.toBeInTheDocument();
 });
-test("fuera de colección no ofrece préstamos y los metadatos se muestran como texto", async () => {
+test("works outside the collection offer no loans and metadata renders as text", async () => {
   (library.getInventory as jest.Mock).mockResolvedValue([]);
   (getWork as jest.Mock).mockResolvedValue({
     id: "OL1W",
@@ -110,9 +102,9 @@ test("fuera de colección no ofrece préstamos y los metadatos se muestran como 
     firstPublishDate: null,
   });
   show(null);
-  await screen.findByText("Fuera de la colección");
+  await screen.findByText("Outside the collection");
   expect(
-    screen.queryByRole("button", { name: /préstamo|Reservar libro/ }),
+    screen.queryByRole("button", { name: /Borrow book|Reserve book/ }),
   ).not.toBeInTheDocument();
   expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
     "<img src=x onerror=alert(1)>",

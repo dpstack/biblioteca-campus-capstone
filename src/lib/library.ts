@@ -1,3 +1,4 @@
+import { englishApiError } from "./errors";
 import { supabase } from "./supabase";
 import type {
   BookSnapshot,
@@ -10,12 +11,12 @@ import type {
 
 const client = () => {
   if (!supabase)
-    throw new Error("Conecta un proyecto Supabase para utilizar esta función.");
+    throw new Error("Connect a Supabase project to use this feature.");
   return supabase;
 };
 
 const throwIfError = (error: { message: string } | null) => {
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(englishApiError(error.message));
 };
 
 export async function getInventory(
@@ -107,7 +108,7 @@ export async function setReadingStatus(
     error: authError,
   } = await client().auth.getUser();
   throwIfError(authError);
-  if (!user) throw new Error("Inicia sesión para guardar tu lista de lectura.");
+  if (!user) throw new Error("Sign in to save your reading list.");
   const { error } = await client()
     .from("reading_list")
     .upsert(

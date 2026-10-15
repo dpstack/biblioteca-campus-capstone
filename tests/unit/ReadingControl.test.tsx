@@ -22,13 +22,13 @@ beforeEach(() => {
   (setReadingStatus as jest.Mock).mockResolvedValue(undefined);
   (removeReadingItem as jest.Mock).mockResolvedValue(undefined);
 });
-test("restaura el estado y conserva un cambio después de volver a abrir", async () => {
+test("restores the reading status and preserves a change after reopening", async () => {
   const user = userEvent.setup();
   const first = render(<ReadingControl book={book} />);
-  const selector = screen.getByLabelText("Estado en mi lista de lectura");
+  const selector = screen.getByLabelText("My reading status");
   await waitFor(() => expect(selector).toHaveValue("reading"));
   await user.selectOptions(selector, "finished");
-  await screen.findByText("Tu estado de lectura se guardó.");
+  await screen.findByText("Your reading status was saved.");
   expect(setReadingStatus).toHaveBeenCalledWith(book, "finished");
   first.unmount();
   (getReadingStatus as jest.Mock).mockResolvedValue("finished");
@@ -37,7 +37,7 @@ test("restaura el estado y conserva un cambio después de volver a abrir", async
     expect(screen.getByRole("combobox")).toHaveValue("finished"),
   );
 });
-test("un guardado fallido conserva el estado y permite recuperarlo", async () => {
+test("a failed save preserves the previous status and allows recovery", async () => {
   (setReadingStatus as jest.Mock).mockRejectedValue(new Error("Offline"));
   const user = userEvent.setup();
   render(<ReadingControl book={book} />);
@@ -46,29 +46,29 @@ test("un guardado fallido conserva el estado y permite recuperarlo", async () =>
   );
   await user.selectOptions(screen.getByRole("combobox"), "finished");
   expect(await screen.findByRole("alert")).toHaveTextContent(
-    "Tu estado anterior se conserva",
+    "Your previous status has been kept",
   );
   expect(screen.getByRole("combobox")).toHaveValue("reading");
-  await user.click(screen.getByRole("button", { name: "Volver a cargar" }));
+  await user.click(screen.getByRole("button", { name: "Reload" }));
   await waitFor(() => expect(screen.getByRole("combobox")).toBeEnabled());
 });
-test("elimina una lectura y vuelve al estado sin selección", async () => {
+test("removes a reading item and clears the selection", async () => {
   const user = userEvent.setup();
   render(<ReadingControl book={book} />);
   await waitFor(() =>
     expect(screen.getByRole("combobox")).toHaveValue("reading"),
   );
-  await user.click(screen.getByRole("button", { name: "Quitar de mi lista" }));
+  await user.click(screen.getByRole("button", { name: "Remove from my list" }));
   expect(
-    await screen.findByText("Libro eliminado de tu lista."),
+    await screen.findByText("Book removed from your list."),
   ).toBeInTheDocument();
   expect(removeReadingItem).toHaveBeenCalledWith("OL1W");
   expect(screen.getByRole("combobox")).toHaveValue("");
   expect(
-    screen.queryByRole("button", { name: "Quitar de mi lista" }),
+    screen.queryByRole("button", { name: "Remove from my list" }),
   ).not.toBeInTheDocument();
 });
-test("un error al cargar no permite sobrescribir una lectura desconocida", async () => {
+test("a load error prevents overwriting an unknown reading status", async () => {
   (getReadingStatus as jest.Mock).mockRejectedValue(new Error("Offline"));
   render(<ReadingControl book={book} />);
   await screen.findByRole("alert");

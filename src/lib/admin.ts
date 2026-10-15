@@ -1,3 +1,4 @@
+import { englishApiError } from "./errors";
 import { supabase } from "./supabase";
 import type { BookSnapshot, InventoryItem, Loan, Reservation } from "../types";
 export interface AdminBook extends InventoryItem {
@@ -12,17 +13,17 @@ export interface AdminDashboard {
   reservations: (Reservation & { email: string })[];
 }
 const client = () => {
-  if (!supabase) throw new Error("Supabase no está configurado.");
+  if (!supabase) throw new Error("Supabase is not configured.");
   return supabase;
 };
 export async function isAdmin(): Promise<boolean> {
   const { data, error } = await client().rpc("is_library_admin");
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(englishApiError(error.message));
   return data === true;
 }
 export async function getAdminDashboard(): Promise<AdminDashboard> {
   const { data, error } = await client().rpc("admin_dashboard");
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(englishApiError(error.message));
   return data as AdminDashboard;
 }
 export async function saveAdminBook(
@@ -38,5 +39,5 @@ export async function saveAdminBook(
     p_total_copies: total,
     p_retired: retired,
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(englishApiError(error.message));
 }

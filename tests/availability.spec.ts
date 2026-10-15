@@ -5,15 +5,15 @@ import { loadEnv } from "vite";
 const publicEnv = loadEnv("development", process.cwd(), "VITE_");
 test.skip(
   !publicEnv.VITE_SUPABASE_URL || !publicEnv.VITE_SUPABASE_PUBLISHABLE_KEY,
-  "Configura Supabase para probar el filtro de inventario.",
+  "Configure Supabase to test the inventory filter.",
 );
 
-test("filtro real de préstamo: stock público y búsqueda combinada", async ({
+test("real borrowing filter: public inventory and combined search", async ({
   page,
 }) => {
-  await page.goto("/catalogo?available=1");
+  await page.goto("/catalog?available=1");
   await expect(
-    page.getByRole("checkbox", { name: "Disponibles para préstamo" }),
+    page.getByRole("checkbox", { name: "Available to borrow" }),
   ).toBeChecked();
   await expect(page.locator(".book-grid article").first()).toBeVisible({
     timeout: 30000,
@@ -23,10 +23,10 @@ test("filtro real de préstamo: stock público y búsqueda combinada", async ({
   expect(count).toBeGreaterThan(0);
   for (let i = 0; i < count; i++)
     await expect(
-      cards.nth(i).getByText("Disponible", { exact: true }),
+      cards.nth(i).getByText("Available", { exact: true }),
     ).toBeVisible();
-  await page.getByLabel("Término de búsqueda").fill("Tolkien");
-  await page.getByRole("button", { name: "Buscar", exact: true }).click();
+  await page.getByLabel("Search term").fill("Tolkien");
+  await page.getByRole("button", { name: "Search", exact: true }).click();
   await expect(page).toHaveURL(/available=1.*q=Tolkien/);
   await expect(
     page.getByRole("heading", { name: "The Lord of the Rings", exact: true }),
@@ -44,16 +44,14 @@ test("filtro real de préstamo: stock público y búsqueda combinada", async ({
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-  await page
-    .getByRole("checkbox", { name: "Disponibles para préstamo" })
-    .click();
+  await page.getByRole("checkbox", { name: "Available to borrow" }).click();
   await expect(page).not.toHaveURL(/available=1/);
   await expect(
-    page.getByRole("checkbox", { name: "Disponibles para préstamo" }),
+    page.getByRole("checkbox", { name: "Available to borrow" }),
   ).not.toBeChecked();
 });
 
-test("inventario simulado: 30 obras disponibles se paginan después del filtro", async ({
+test("mock inventory: 30 available works are paginated after filtering", async ({
   page,
 }) => {
   const ids = Array.from({ length: 30 }, (_, i) => `OL${i + 1}W`);
@@ -84,12 +82,12 @@ test("inventario simulado: 30 obras disponibles se paginan después del filtro",
       },
     });
   });
-  await page.goto("/catalogo?available=1");
+  await page.goto("/catalog?available=1");
   await expect(page.locator(".book-grid article")).toHaveCount(24);
-  await expect(page.getByText("Página 1 de 2")).toBeVisible();
-  await page.getByRole("button", { name: "Siguiente" }).click();
+  await expect(page.getByText("Page 1 of 2")).toBeVisible();
+  await page.getByRole("button", { name: "Next" }).click();
   await expect(page.locator(".book-grid article")).toHaveCount(6);
-  await expect(page.getByText("Página 2 de 2")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Siguiente" })).toBeDisabled();
+  await expect(page.getByText("Page 2 of 2")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Next" })).toBeDisabled();
   await expect(page.getByRole("checkbox")).toBeChecked();
 });

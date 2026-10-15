@@ -21,8 +21,8 @@ export function AdminLink({ onNavigate }: { onNavigate?: () => void }) {
     };
   }, [userId]);
   return userId && allowedFor === userId ? (
-    <Link className="nav-link" to="/administracion" onClick={onNavigate}>
-      Administración
+    <Link className="nav-link" to="/admin" onClick={onNavigate}>
+      Administration
     </Link>
   ) : null;
 }

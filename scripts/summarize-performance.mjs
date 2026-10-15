@@ -30,56 +30,60 @@ for (const project of ["desktop", "mobile"])
       final.length !== 3 ||
       final.some((item) => !item.deploymentId)
     )
-      throw new Error(`Faltan muestras completas para ${project}/${route}`);
+      throw new Error(`Missing complete samples for ${project}/${route}`);
     const sec = (value) => (value / 1000).toFixed(2);
     rows.push(
       `| ${project} / ${route} | ${sec(before.lcp)} | ${sec(median(final.map((item) => item.lcp)))} | ${before.cls.toFixed(3)} | ${median(final.map((item) => item.cls)).toFixed(3)} | ${sec(median(final.map((item) => item.fcp)))} | ${median(final.map((item) => item.longTasks)).toFixed(0)} |`,
     );
   }
-const text = `# Rendimiento en producción — 9 de octubre de 2026
+const text = `# Production performance — October 9, 2026
 
-## Método
+## Method
 
-URL pública: https://biblioteca-campus-capstone-dpstacks-projects.vercel.app. Chrome instalado y Playwright, un trabajador, página al frente, contexto nuevo por muestra. Inicio y catálogo con Tolkien. Se observa hasta diez segundos después de aparecer la primera tarjeta. Escritorio: 1440×900 sin limitación artificial. Móvil: Pixel 7, latencia 150 ms, descarga 1,6 Mbps, subida 0,75 Mbps y CPU cuatro veces más lenta mediante CDP.
+Public URL: https://biblioteca-campus-capstone-dpstacks-projects.vercel.app/. Installed Chrome with Playwright, one worker, foreground page, fresh context per sample. Home and Tolkien catalog were observed until ten seconds after the first card appeared. Desktop: 1440×900 without artificial throttling. Mobile: Pixel 7, 150 ms latency, 1.6 Mbps download, 0.75 Mbps upload, and 4× CPU slowdown through CDP.
 
-Hay una muestra de referencia por combinación y tres muestras finales; la tabla usa la mediana final. Es una comparación indicativa, no un estudio estadístico controlado. Las API externas, caché de red, navegador y carga de la computadora pueden variar. No se presenta un puntaje Lighthouse ni datos de usuarios reales.
+There is one baseline sample and three final samples per combination; the table reports final medians. External APIs, network caches, browser state, and computer load vary. These are indicative synthetic measurements, not a controlled statistical study, Lighthouse score, or real-user data.
 
-Procedencia de las muestras finales: ${["home", "catalog"].map((route) => `${route}: ${[...new Set(samples.filter((item) => item.name.startsWith("final-") && item.route === route).map((item) => item.deploymentId))].join(", ")}`).join("; ")}. La última revisión separa el inventario del catálogo; la portada conserva el código del despliegue medido anteriormente.
+Final sample provenance: ${["home", "catalog"].map((route) => `${route}: ${[...new Set(samples.filter((item) => item.name.startsWith("final-") && item.route === route).map((item) => item.deploymentId))].join(", ")}`).join("; ")}. The final catalog revision separates inventory loading; home preserves the earlier measured implementation.
 
-## Resultados
+## Results
 
-LCP y FCP en segundos. CLS es la suma de desplazamientos sin interacción durante la observación; no implementa ventanas de sesión de toda una visita. Bloqueo suma el exceso sobre 50 ms de tareas largas durante la observación; no es TBT de Lighthouse.
+LCP and FCP are seconds. CLS sums shifts without recent input during observation; it does not implement full-visit session windows. Blocking sums long-task time exceeding 50 ms during observation and is not Lighthouse TBT.
 
-| Pantalla | LCP referencia (1 muestra) | LCP final (mediana de 3) | CLS referencia | CLS final | FCP final | Bloqueo final (ms) |
+| Screen | Baseline LCP (1 sample) | Final LCP (median of 3) | Baseline CLS | Final CLS | Final FCP | Final blocking (ms) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 ${rows.join("\n")}
 
-Las metas de campo de referencia son LCP ≤2,5 s y CLS ≤0,1 para el percentil 75, según [web.dev LCP](https://web.dev/articles/lcp) y [web.dev CLS](https://web.dev/articles/cls). Tres muestras sintéticas no permiten certificar ese percentil ni medir INP real. Un LCP móvil superior a 2,5 s sigue siendo una oportunidad de mejora bajo la limitación utilizada; no se oculta ni se declara rendimiento perfecto.
+The field reference targets are LCP ≤2.5 s and CLS ≤0.1 at the 75th percentile: [LCP](https://web.dev/articles/lcp), [CLS](https://web.dev/articles/cls). Three synthetic samples cannot certify that percentile or measure real INP. Mobile LCP exceeds 2.5 s under this throttling configuration.
 
-## Cambios
+## Changes measured
 
-- SDK Supabase separado de la entrada inicial: se restaura la sesión después de cargar el módulo; rutas privadas esperan la restauración. La entrada y su dependencia estática suman 281,48 KB (91,26 KB gzip), frente a 494,37 KB (145,15 KB gzip) antes de separar autenticación. El SDK diferido añade 214,34 KB (55,09 KB gzip): se reduce el trabajo inicial, no se elimina esa descarga.
-- Portadas decorativas M en lugar de L, precarga de la portada principal y preconnect al servidor de portadas. Las imágenes de tarjetas siguen usando lazy.
-- Fuentes con display=optional: si tardan, se conserva la fuente de respaldo para evitar intercambio tardío y cambios de geometría. La apariencia puede usar Georgia/Arial en la primera visita con red lenta.
-- Encabezado persistente y espacio mínimo del contenido: el pie no aparece arriba mientras se carga una ruta y después se desplaza fuera de pantalla.
-- Se eliminó el campo subject de resultados de búsqueda, que no se muestra en tarjetas; los temas de la ficha siguen solicitándose a la obra.
-- El catálogo presenta metadatos públicos sin esperar a cargar el SDK y consultar inventario. La disponibilidad se añade al completarse esa consulta independiente.
+- Deferred Supabase SDK and session restoration; protected routes wait for restoration. Entry plus static dependency: 281.48 KB (91.26 KB gzip), previously 494.37 KB (145.15 KB gzip). The deferred SDK adds 214.34 KB (55.09 KB gzip); its download is deferred, not eliminated.
+- Decorative M-size covers replace L-size covers, with hero preload, cover-host preconnect, and lazy card images.
+- Optional font display retains Georgia/Arial on an initially slow connection, avoiding late font swaps and geometry changes.
+- Persistent header and minimum content space prevent the footer from shifting after a route loads.
+- Search excludes unused subjects; book details still request subjects.
+- Catalog metadata renders independently of SDK and inventory loading.
 
-## Reproducir
+## Reproduction
 
-En PowerShell, después de npm ci y con Chrome instalado:
+After npm ci, with Chrome installed, use PowerShell. Replace the deployment identifier with the deployment actually being measured; the example identifies the historical final catalog sample.
 
 ${fence}powershell
 $env:BASE_URL='https://biblioteca-campus-capstone-dpstacks-projects.vercel.app'
 $env:PLAYWRIGHT_CHANNEL='chrome'
 $env:PERFORMANCE_AUDIT='1'
 $env:AUDIT_LABEL='final'
-$env:AUDIT_DEPLOYMENT_ID='${samples.find((item) => item.name.startsWith("final-")).deploymentId}'
+$env:AUDIT_DEPLOYMENT_ID='dpl_X4KDw8b3XgBxNjw9RpVxwufVM2Y5'
 npm run test:e2e
 node scripts/summarize-performance.mjs
 ${fence}
 
-Retira PERFORMANCE_AUDIT para volver a la suite funcional. No ejecutes otras suites simultáneamente con la medición. Los resultados crudos, fuentes del LCP, desplazamientos y tiempos están en docs/performance/*.json. baseline corresponde a la referencia, intermediate al despliegue intermedio que reveló el desplazamiento del pie y final a la versión corregida. Cada JSON indica el despliegue. Las capturas audit-* están en docs/screenshots.
+Remove PERFORMANCE_AUDIT to restore functional testing. Do not run competing suites during measurement. Raw JSON files in docs/performance preserve timings, LCP sources, shifts, and deployment identifiers. Baseline, intermediate, and final prefixes distinguish the measured stages. Historical audit screenshots retain the interface present on their measurement date.
+
+## Later releases
+
+These measurements were not repeated for the administrative panel (dpl_FooN13uYrhrTWeggFN2sooYksVVc), borrowing filter (dpl_5hhddB1eeyBUoiEEgVDfKb1STFo6), themes (dpl_2yMCjieS34XUoddoghNDuYMRAJzx), typography (dpl_hfWaQYMm9DKE2WHpVno5HFseeSJ2), final polish (dpl_8XRfswk3na5NnVvnk64ttrb1HcBV), or the English release. Current functional test results do not replace these dated performance measurements.
 `;
 fs.writeFileSync(new URL("../docs/PERFORMANCE.md", import.meta.url), text);
 process.stdout.write(rows.join("\n") + "\n");

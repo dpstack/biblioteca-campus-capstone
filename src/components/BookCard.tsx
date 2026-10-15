@@ -18,14 +18,14 @@ export function BookCard({
     <article className={styles.card}>
       <Link
         className={styles.coverLink}
-        to={`/libro/${book.id}`}
-        aria-label={`Ver detalles de ${book.title}`}
+        to={`/books/${book.id}`}
+        aria-label={`View details of ${book.title}`}
       >
         <div className={styles.cover}>
           {cover && !coverFailed ? (
             <img
               src={cover}
-              alt={`Portada de ${book.title}`}
+              alt={`Cover of ${book.title}`}
               loading="lazy"
               onError={() => setCoverFailed(true)}
             />
@@ -37,25 +37,25 @@ export function BookCard({
               className={`${styles.stock} ${!inventory.retired && inventory.available_copies > 0 ? styles.available : ""}`}
             >
               {inventory.retired
-                ? "Retirada"
+                ? "Retired"
                 : inventory.available_copies > 0
-                  ? "Disponible"
-                  : "En préstamo"}
+                  ? "Available"
+                  : "On loan"}
             </span>
           )}
         </div>
       </Link>
       <div className={styles.content}>
         <span className={styles.eyebrow}>
-          {book.firstPublishYear ?? "Edición sin fecha"} · {book.editionCount}{" "}
-          ediciones
+          {book.firstPublishYear ?? "Publication date unavailable"} ·{" "}
+          {book.editionCount} editions
         </span>
         <h3>
-          <Link to={`/libro/${book.id}`}>{book.title}</Link>
+          <Link to={`/books/${book.id}`}>{book.title}</Link>
         </h3>
-        <p>{book.authors.join(", ") || "Autor no indicado"}</p>
-        <Link className={styles.detail} to={`/libro/${book.id}`}>
-          Ver libro <ArrowUpRight size={16} />
+        <p>{book.authors.join(", ") || "Unknown author"}</p>
+        <Link className={styles.detail} to={`/books/${book.id}`}>
+          View book <ArrowUpRight size={16} />
         </Link>
       </div>
     </article>

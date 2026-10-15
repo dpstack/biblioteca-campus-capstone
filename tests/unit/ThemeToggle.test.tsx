@@ -18,10 +18,10 @@ beforeEach(() => {
   window.matchMedia = jest.fn(() => media) as any;
 });
 
-test("el control accesible alterna el tema y persiste la elección", async () => {
+test("the accessible control toggles theme and persists the choice", async () => {
   const user = userEvent.setup();
   const view = render(<ThemeToggle />);
-  const button = screen.getByRole("button", { name: "Tema oscuro" });
+  const button = screen.getByRole("button", { name: "Dark theme" });
   expect(button).toHaveAttribute("aria-pressed", "false");
   button.focus();
   await user.keyboard("{Enter}");
@@ -35,7 +35,7 @@ test("el control accesible alterna el tema y persiste la elección", async () =>
   expect(document.documentElement.dataset.theme).toBe("light");
 });
 
-test("sigue el sistema sin preferencia explícita y deja de seguirlo al elegir", async () => {
+test("follows the system until an explicit theme is chosen", async () => {
   const user = userEvent.setup();
   render(<ThemeToggle />);
   const onChange = media.addEventListener.mock.calls[0][1];
@@ -54,7 +54,7 @@ test("sigue el sistema sin preferencia explícita y deja de seguirlo al elegir",
   );
 });
 
-test("continúa funcionando si el navegador bloquea el almacenamiento", async () => {
+test("continues working when browser storage is blocked", async () => {
   const read = jest
     .spyOn(Storage.prototype, "getItem")
     .mockImplementation(() => {
@@ -75,7 +75,7 @@ test("continúa funcionando si el navegador bloquea el almacenamiento", async ()
   }
 });
 
-test("sincroniza la preferencia modificada en otra pestaña", async () => {
+test("synchronizes a preference changed in another tab", async () => {
   render(<ThemeToggle />);
   localStorage.setItem("biblioteca-theme-v1", "dark");
   window.dispatchEvent(

@@ -49,7 +49,7 @@ function BookDetail({ workId }: { workId: string }) {
             setInventoryError(
               cause instanceof Error
                 ? cause.message
-                : "No se pudo consultar el inventario.",
+                : "Inventory could not be retrieved.",
             );
         }
       })
@@ -58,7 +58,7 @@ function BookDetail({ workId }: { workId: string }) {
           setError(
             cause instanceof Error
               ? cause.message
-              : "No se pudo cargar este libro.",
+              : "This book could not be loaded.",
           );
       })
       .finally(() => {
@@ -75,18 +75,18 @@ function BookDetail({ workId }: { workId: string }) {
     const snapshot = {
       work_id: book.id,
       title: book.title,
-      author: book.authors.join(", ") || "Autor no indicado",
+      author: book.authors.join(", ") || "Unknown author",
       cover_id: book.coverId,
     };
     try {
       if (action === "borrow") {
         await borrowBook(snapshot);
-        setMessage(
-          "Préstamo registrado. Consulta la fecha de entrega en Mi biblioteca.",
-        );
+        setMessage("Loan registered. Check the due date in My library.");
       } else if (action === "reserve") {
         await reserveBook(snapshot);
-        setMessage("Reserva registrada. Tu turno aparecerá en Mi biblioteca.");
+        setMessage(
+          "Reservation registered. Your position will appear in My library.",
+        );
       }
       const records = await getInventory([book.id]);
       setInventory(records[0] ?? null);
@@ -94,7 +94,7 @@ function BookDetail({ workId }: { workId: string }) {
       setActionError(
         cause instanceof Error
           ? cause.message
-          : "No se pudo completar la operación.",
+          : "The operation could not be completed.",
       );
     } finally {
       setActionPending(false);
@@ -104,14 +104,14 @@ function BookDetail({ workId }: { workId: string }) {
   if (loading)
     return (
       <div className="container page-status" role="status">
-        Cargando detalles de la obra…
+        Loading book details…
       </div>
     );
   if (error || !book)
     return (
       <div className="container page-status">
-        <p role="alert">{error || "No encontramos este libro."}</p>
-        <Link to="/catalogo">Volver al catálogo</Link>
+        <p role="alert">{error || "We could not find this book."}</p>
+        <Link to="/catalog">Back to catalog</Link>
       </div>
     );
 
@@ -123,8 +123,8 @@ function BookDetail({ workId }: { workId: string }) {
       : book.description;
   return (
     <div className="container book-detail-page">
-      <Link className="back-link" to="/catalogo">
-        <ArrowLeft size={17} /> Volver al catálogo
+      <Link className="back-link" to="/catalog">
+        <ArrowLeft size={17} /> Back to catalog
       </Link>
       <div className="book-detail-grid">
         <div className="detail-cover-wrap">
@@ -132,7 +132,7 @@ function BookDetail({ workId }: { workId: string }) {
             {cover && !coverFailed ? (
               <img
                 src={cover}
-                alt={`Portada de ${book.title}`}
+                alt={`Cover of ${book.title}`}
                 onError={() => setCoverFailed(true)}
               />
             ) : (
@@ -144,27 +144,26 @@ function BookDetail({ workId }: { workId: string }) {
             target="_blank"
             rel="noreferrer"
           >
-            Ver ficha en Open Library <ArrowUpRight size={15} />
+            View on Open Library <ArrowUpRight size={15} />
           </a>
         </div>
         <div className="detail-main">
-          <span className="eyebrow">DETALLES DEL LIBRO</span>
+          <span className="eyebrow">BOOK DETAILS</span>
           <h1>{book.title}</h1>
           <p className="detail-author">
-            por{" "}
-            <strong>{book.authors.join(", ") || "Autor no indicado"}</strong>
+            by <strong>{book.authors.join(", ") || "Unknown author"}</strong>
           </p>
           <div className="detail-meta">
             <span>
               <CalendarDays size={17} />{" "}
-              {book.firstPublishDate ?? "Fecha no indicada"}
+              {book.firstPublishDate ?? "Date unavailable"}
             </span>
             <span>
-              <LibraryBig size={17} /> Obra {book.id}
+              <LibraryBig size={17} /> Work {book.id}
             </span>
           </div>
           <div className="detail-divider" />
-          <h2>Acerca de este libro</h2>
+          <h2>About this book</h2>
           <p className="book-description">{description}</p>
           {descriptionIsLong && (
             <button
@@ -172,14 +171,12 @@ function BookDetail({ workId }: { workId: string }) {
               type="button"
               onClick={() => setShowFullDescription((value) => !value)}
             >
-              {showFullDescription
-                ? "Mostrar menos"
-                : "Leer descripción completa"}
+              {showFullDescription ? "Show less" : "Read full description"}
             </button>
           )}
           {book.subjects.length > 0 && (
             <>
-              <h2>Temas</h2>
+              <h2>Subjects</h2>
               <div className="subject-tags">
                 {book.subjects.map((subject) => (
                   <span key={subject}>{subject}</span>
@@ -190,18 +187,18 @@ function BookDetail({ workId }: { workId: string }) {
         </div>
         <aside
           className="book-action-panel"
-          aria-label="Disponibilidad y acciones"
+          aria-label="Availability and actions"
         >
-          <span className="eyebrow">EN LA BIBLIOTECA CAMPUS</span>
-          <h2>Tu próxima lectura</h2>
+          <span className="eyebrow">IN THE CAMPUS LIBRARY</span>
+          <h2>Your next read</h2>
           {!isSupabaseConfigured ? (
             <div className="stock-message">
               <Clock3 size={20} />
               <div>
-                <strong>Préstamos aún sin conectar</strong>
+                <strong>Loans are not connected yet</strong>
                 <p>
-                  El catálogo funciona; configura Supabase para consultar
-                  ejemplares y usar tu cuenta.
+                  The catalog is available. Configure Supabase to check copies
+                  and use your account.
                 </p>
               </div>
             </div>
@@ -209,10 +206,9 @@ function BookDetail({ workId }: { workId: string }) {
             <div className="stock-message" role="alert">
               <Clock3 size={20} />
               <div>
-                <strong>Inventario no disponible</strong>
+                <strong>Inventory unavailable</strong>
                 <p>
-                  Revisa la conexión o la migración de Supabase:{" "}
-                  {inventoryError}
+                  Check your connection or Supabase migrations: {inventoryError}
                 </p>
               </div>
             </div>
@@ -220,10 +216,10 @@ function BookDetail({ workId }: { workId: string }) {
             <div className="stock-message">
               <span className="stock-dot" />
               <div>
-                <strong>Retirada de la colección activa</strong>
+                <strong>Retired from the active collection</strong>
                 <p>
-                  Esta obra no admite nuevos préstamos ni reservas. Los
-                  préstamos existentes pueden devolverse desde Mi biblioteca.
+                  This work is closed to new loans and reservations. Existing
+                  loans can be returned from My library.
                 </p>
               </div>
             </div>
@@ -235,12 +231,12 @@ function BookDetail({ workId }: { workId: string }) {
               <div>
                 <strong>
                   {inventory.available_copies > 0
-                    ? "Disponible para préstamo"
-                    : "Todos los ejemplares prestados"}
+                    ? "Available to borrow"
+                    : "All copies are on loan"}
                 </strong>
                 <p>
-                  {inventory.available_copies} de {inventory.total_copies}{" "}
-                  ejemplares disponibles
+                  {inventory.available_copies} of {inventory.total_copies}{" "}
+                  copies available
                 </p>
               </div>
             </div>
@@ -248,10 +244,10 @@ function BookDetail({ workId }: { workId: string }) {
             <div className="stock-message">
               <Clock3 size={20} />
               <div>
-                <strong>Fuera de la colección</strong>
+                <strong>Outside the collection</strong>
                 <p>
-                  Esta obra aparece en Open Library, pero aún no tiene
-                  ejemplares registrados en la biblioteca.
+                  This work appears in Open Library, but no copies have been
+                  added to this library yet.
                 </p>
               </div>
             </div>
@@ -271,15 +267,15 @@ function BookDetail({ workId }: { workId: string }) {
                 <Bookmark size={18} />
               )}
               {actionPending
-                ? "Procesando…"
+                ? "Processing…"
                 : inventory.available_copies > 0
-                  ? "Solicitar préstamo"
-                  : "Reservar libro"}
+                  ? "Borrow book"
+                  : "Reserve book"}
             </button>
           )}
           {!session && isSupabaseConfigured && (
-            <Link className="button button-primary action-button" to="/acceso">
-              Inicia sesión para continuar
+            <Link className="button button-primary action-button" to="/login">
+              Sign in to continue
             </Link>
           )}
           {session && (
@@ -288,7 +284,7 @@ function BookDetail({ workId }: { workId: string }) {
               book={{
                 work_id: book.id,
                 title: book.title,
-                author: book.authors.join(", ") || "Autor no indicado",
+                author: book.authors.join(", ") || "Unknown author",
                 cover_id: book.coverId,
               }}
             />
@@ -304,8 +300,8 @@ function BookDetail({ workId }: { workId: string }) {
             </p>
           )}
           <p className="panel-fineprint">
-            Los metadatos proceden de Open Library. La disponibilidad
-            corresponde únicamente al inventario de Biblioteca Campus.
+            Metadata comes from Open Library. Availability refers only to Campus
+            Library's own inventory.
           </p>
         </aside>
       </div>

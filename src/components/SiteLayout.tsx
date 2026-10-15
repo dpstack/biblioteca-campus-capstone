@@ -15,9 +15,9 @@ import { AdminLink } from "./AdminLink";
 import { ThemeToggle } from "./ThemeToggle";
 
 const navLinks = [
-  { to: "/", label: "Inicio", end: true },
-  { to: "/catalogo", label: "Explorar catálogo", end: false },
-  { to: "/mi-biblioteca", label: "Mi biblioteca", end: false },
+  { to: "/", label: "Home", end: true },
+  { to: "/catalog", label: "Explore catalog", end: false },
+  { to: "/my-library", label: "My library", end: false },
 ];
 
 export function SiteLayout() {
@@ -34,8 +34,8 @@ export function SiteLayout() {
 
   return (
     <div className="site-shell">
-      <a className="skip-link" href="#contenido">
-        Saltar al contenido
+      <a className="skip-link" href="#main-content">
+        Skip to content
       </a>
       <header
         className="site-header"
@@ -51,14 +51,14 @@ export function SiteLayout() {
             className="brand"
             to="/"
             onClick={() => setMenuOpen(false)}
-            aria-label="Biblioteca Campus, inicio"
+            aria-label="Campus Library, home"
           >
             <span className="brand-mark">
               <LibraryBig size={22} strokeWidth={2.2} />
             </span>
             <span>
-              <strong>Biblioteca</strong>
-              <small>CAMPUS DIGITAL</small>
+              <strong>Library</strong>
+              <small>DIGITAL CAMPUS</small>
             </span>
           </Link>
           <button
@@ -68,14 +68,14 @@ export function SiteLayout() {
             onClick={() => setMenuOpen((open) => !open)}
             aria-expanded={menuOpen}
             aria-controls="main-navigation"
-            aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
           >
             {menuOpen ? <X size={23} /> : <Menu size={23} />}
           </button>
           <nav
             id="main-navigation"
             className={`main-nav ${menuOpen ? "is-open" : ""}`}
-            aria-label="Navegación principal"
+            aria-label="Main navigation"
           >
             {navLinks.map(({ to, label, end }) => (
               <NavLink
@@ -92,11 +92,11 @@ export function SiteLayout() {
             ))}
             <AdminLink onNavigate={() => setMenuOpen(false)} />
             <Link
-              to={session ? "/mi-biblioteca" : "/acceso"}
+              to={session ? "/my-library" : "/login"}
               className="header-account"
               onClick={() => setMenuOpen(false)}
             >
-              <UserRound size={17} /> {session ? "Mi cuenta" : "Iniciar sesión"}
+              <UserRound size={17} /> {session ? "My account" : "Sign in"}
             </Link>
           </nav>
           <ThemeToggle />
@@ -104,18 +104,18 @@ export function SiteLayout() {
       </header>
       {!isSupabaseConfigured && (
         <div className="setup-banner" role="status">
-          Modo catálogo: conecta Supabase para activar cuentas, préstamos y
-          reservas.{" "}
-          <Link to="/acceso">
-            Ver detalles <ArrowUpRight size={13} />
+          Catalog mode: connect Supabase to enable accounts, loans, and
+          reservations.{" "}
+          <Link to="/login">
+            View details <ArrowUpRight size={13} />
           </Link>
         </div>
       )}
-      <main id="contenido" ref={main} tabIndex={-1}>
+      <main id="main-content" ref={main} tabIndex={-1}>
         <Suspense
           fallback={
             <div className="page-status" role="status">
-              Cargando página…
+              Loading page…
             </div>
           }
         >
@@ -130,27 +130,27 @@ export function SiteLayout() {
                 <BookOpen size={21} />
               </span>
               <span>
-                <strong>Biblioteca</strong>
-                <small>CAMPUS DIGITAL</small>
+                <strong>Library</strong>
+                <small>DIGITAL CAMPUS</small>
               </span>
             </Link>
-            <p>Una mejor manera de descubrir, leer y compartir conocimiento.</p>
+            <p>A better way to discover, read, and share knowledge.</p>
           </div>
           <div className="footer-links">
-            <Link to="/catalogo">
-              <Search size={15} /> Explorar libros
+            <Link to="/catalog">
+              <Search size={15} /> Explore books
             </Link>
-            <Link to="/mi-biblioteca">
-              <UserRound size={15} /> Mi biblioteca
+            <Link to="/my-library">
+              <UserRound size={15} /> My library
             </Link>
             <a href="https://openlibrary.org" target="_blank" rel="noreferrer">
-              Datos de Open Library <ArrowUpRight size={15} />
+              Open Library data <ArrowUpRight size={15} />
             </a>
           </div>
         </div>
         <div className="container footer-bottom">
-          <span>Proyecto Capstone · Desarrollo Web</span>
-          <span>Metadatos e imágenes: Open Library</span>
+          <span>Capstone Project · Web Development</span>
+          <span>Metadata and images: Open Library</span>
         </div>
       </footer>
     </div>

@@ -13,64 +13,61 @@ function show() {
     <AuthContext.Provider
       value={{ session: null, isLoading: false, signOut: jest.fn() }}
     >
-      <MemoryRouter initialEntries={["/acceso"]}>
+      <MemoryRouter initialEntries={["/login"]}>
         <Routes>
-          <Route path="/acceso" element={<AuthPage />} />
-          <Route path="/mi-biblioteca" element={<h1>Mis préstamos</h1>} />
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="/my-library" element={<h1>My loans</h1>} />
         </Routes>
       </MemoryRouter>
     </AuthContext.Provider>,
   );
 }
 async function fill(user) {
-  await user.type(
-    screen.getByLabelText("Correo electrónico"),
-    "ana@campus.edu",
-  );
-  await user.type(screen.getByLabelText("Contraseña"), "password123");
+  await user.type(screen.getByLabelText("Email address"), "ana@campus.edu");
+  await user.type(screen.getByLabelText("Password"), "password123");
 }
-test("envía las credenciales y abre la biblioteca después del login", async () => {
+test("submits credentials and opens the library after sign-in", async () => {
   (supabase!.auth.signInWithPassword as jest.Mock).mockResolvedValue({
     error: null,
   });
   show();
   const user = userEvent.setup();
   await fill(user);
-  await user.click(screen.getByRole("button", { name: "Iniciar sesión" }));
+  await user.click(screen.getByRole("button", { name: "Sign in" }));
   expect(
-    await screen.findByRole("heading", { name: "Mis préstamos" }),
+    await screen.findByRole("heading", { name: "My loans" }),
   ).toBeInTheDocument();
   expect(supabase!.auth.signInWithPassword).toHaveBeenCalledWith({
     email: "ana@campus.edu",
     password: "password123",
   });
 });
-test("muestra un rechazo de credenciales y permite reintentar", async () => {
+test("shows rejected credentials and allows retrying", async () => {
   (supabase!.auth.signInWithPassword as jest.Mock).mockResolvedValue({
-    error: new Error("Credenciales inválidas"),
+    error: new Error("Invalid credentials"),
   });
   show();
   const user = userEvent.setup();
   await fill(user);
-  await user.click(screen.getByRole("button", { name: "Iniciar sesión" }));
+  await user.click(screen.getByRole("button", { name: "Sign in" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
-    "Credenciales inválidas",
+    "Invalid credentials",
   );
-  expect(screen.getByRole("button", { name: "Iniciar sesión" })).toBeEnabled();
-  expect(screen.queryByText("Mis préstamos")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Sign in" })).toBeEnabled();
+  expect(screen.queryByText("My loans")).not.toBeInTheDocument();
 });
-test("registro sin sesión requiere confirmación por correo", async () => {
+test("registration without a session requires email confirmation", async () => {
   (supabase!.auth.signUp as jest.Mock).mockResolvedValue({
     data: { session: null },
     error: null,
   });
   show();
   const user = userEvent.setup();
-  await user.click(screen.getByRole("button", { name: "Regístrate" }));
+  await user.click(screen.getByRole("button", { name: "Sign up" }));
   await fill(user);
-  await user.click(screen.getByRole("button", { name: "Crear cuenta" }));
+  await user.click(screen.getByRole("button", { name: "Create account" }));
   expect(await screen.findByRole("status")).toHaveTextContent(
-    "Revisa tu correo",
+    "Check your email",
   );
-  expect(screen.queryByText("Mis préstamos")).not.toBeInTheDocument();
+  expect(screen.queryByText("My loans")).not.toBeInTheDocument();
 });

@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 // Opt-in production measurement, not a claim about real-user Core Web Vitals.
 for (const route of [
   { name: "home", path: "/" },
-  { name: "catalog", path: "/catalogo?q=Tolkien" },
+  { name: "catalog", path: "/catalog?q=Tolkien" },
 ]) {
   for (
     let attempt = 1;

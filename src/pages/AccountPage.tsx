@@ -32,7 +32,7 @@ type Tab = "loans" | "reservations" | "reading";
 const tabs: Tab[] = ["loans", "reservations", "reading"];
 
 const formatDate = (date: string) =>
-  new Intl.DateTimeFormat("es", {
+  new Intl.DateTimeFormat("en", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -78,7 +78,7 @@ function AccountPage() {
           setError(
             cause instanceof Error
               ? cause.message
-              : "No se pudo cargar tu biblioteca.",
+              : "Your library could not be loaded.",
           );
       })
       .finally(() => {
@@ -121,8 +121,8 @@ function AccountPage() {
   };
 
   if (isLoading)
-    return <div className="container page-status">Verificando sesión…</div>;
-  if (!session) return <Navigate to="/acceso" replace />;
+    return <div className="container page-status">Checking session…</div>;
+  if (!session) return <Navigate to="/login" replace />;
 
   const perform = async (kind: "return" | "cancel" | "remove", id: string) => {
     setError("");
@@ -135,16 +135,16 @@ function AccountPage() {
       await refresh();
       setMessage(
         kind === "return"
-          ? "Devolución registrada correctamente."
+          ? "Book returned successfully."
           : kind === "cancel"
-            ? "Reserva cancelada correctamente."
-            : "Libro eliminado de tu lista.",
+            ? "Reservation canceled successfully."
+            : "Book removed from your list.",
       );
     } catch (cause) {
       setError(
         cause instanceof Error
           ? cause.message
-          : "No fue posible completar la operación.",
+          : "The operation could not be completed.",
       );
     } finally {
       setPendingId("");
@@ -156,11 +156,11 @@ function AccountPage() {
       <section className="page-intro account-intro">
         <div className="container account-heading">
           <div>
-            <span className="eyebrow">MI ESPACIO</span>
-            <h1>Mi biblioteca</h1>
+            <span className="eyebrow">MY SPACE</span>
+            <h1>My library</h1>
             <p>
-              Hola, {session.user.email}. Aquí tienes tus lecturas y
-              solicitudes.
+              Hello, {session.user.email}. Here are your reading list and
+              requests.
             </p>
           </div>
           <button
@@ -171,12 +171,12 @@ function AccountPage() {
                 setError(
                   cause instanceof Error
                     ? cause.message
-                    : "No se pudo cerrar sesión.",
+                    : "Could not sign out.",
                 ),
               )
             }
           >
-            <LogOut size={17} /> Cerrar sesión
+            <LogOut size={17} /> Sign out
           </button>
         </div>
       </section>
@@ -187,21 +187,21 @@ function AccountPage() {
               <BookOpen size={20} />
             </span>
             <strong>{activeLoans.length}</strong>
-            <small>Préstamos activos</small>
+            <small>Active loans</small>
           </div>
           <div>
             <span className="stats-icon">
               <Clock3 size={20} />
             </span>
             <strong>{waitingReservations.length}</strong>
-            <small>Reservas pendientes</small>
+            <small>Pending reservations</small>
           </div>
           <div>
             <span className="stats-icon">
               <BookMarked size={20} />
             </span>
             <strong>{reading.length}</strong>
-            <small>En mi lista</small>
+            <small>On my list</small>
           </div>
         </div>
         {error && (
@@ -217,7 +217,7 @@ function AccountPage() {
         <div
           className="account-tabs"
           role="tablist"
-          aria-label="Secciones de mi biblioteca"
+          aria-label="My library sections"
         >
           <button
             id="tab-loans"
@@ -233,7 +233,7 @@ function AccountPage() {
             className={tab === "loans" ? "active" : ""}
             onClick={() => setTab("loans")}
           >
-            Préstamos <span>{loans.length}</span>
+            Loans <span>{loans.length}</span>
           </button>
           <button
             id="tab-reservations"
@@ -249,7 +249,7 @@ function AccountPage() {
             className={tab === "reservations" ? "active" : ""}
             onClick={() => setTab("reservations")}
           >
-            Reservas <span>{reservations.length}</span>
+            Reservations <span>{reservations.length}</span>
           </button>
           <button
             id="tab-reading"
@@ -265,7 +265,7 @@ function AccountPage() {
             className={tab === "reading" ? "active" : ""}
             onClick={() => setTab("reading")}
           >
-            Lista de lectura <span>{reading.length}</span>
+            Reading list <span>{reading.length}</span>
           </button>
         </div>
         <div
@@ -276,7 +276,7 @@ function AccountPage() {
           className="account-panel"
         >
           {loading ? (
-            <p role="status">Cargando tus datos…</p>
+            <p role="status">Loading your data…</p>
           ) : tab === "loans" ? (
             loans.length ? (
               <div className="account-list">
@@ -288,16 +288,16 @@ function AccountPage() {
                       <>
                         <CalendarClock size={15} />{" "}
                         {loan.returned_at
-                          ? `Devuelto el ${formatDate(loan.returned_at)}`
-                          : `Entrega: ${formatDate(loan.due_at)}`}
+                          ? `Returned on ${formatDate(loan.returned_at)}`
+                          : `Due: ${formatDate(loan.due_at)}`}
                       </>
                     }
                     badge={
                       loan.returned_at
-                        ? "Devuelto"
+                        ? "Returned"
                         : Date.parse(loan.due_at) < openedAt
-                          ? "Vencido"
-                          : "Activo"
+                          ? "Overdue"
+                          : "Active"
                     }
                     action={
                       !loan.returned_at && (
@@ -308,8 +308,8 @@ function AccountPage() {
                         >
                           <CheckCircle2 size={16} />{" "}
                           {pendingId === loan.id
-                            ? "Procesando…"
-                            : "Registrar devolución"}
+                            ? "Processing…"
+                            : "Return book"}
                         </button>
                       )
                     }
@@ -318,8 +318,8 @@ function AccountPage() {
               </div>
             ) : (
               <EmptyState
-                title="Aún no tienes préstamos"
-                description="Explora la colección y encuentra un libro disponible para llevar contigo."
+                title="You have no loans yet"
+                description="Explore the collection and find an available book to borrow."
               />
             )
           ) : tab === "reservations" ? (
@@ -331,16 +331,16 @@ function AccountPage() {
                     item={reservation}
                     meta={
                       <>
-                        <Clock3 size={15} /> Solicitado el{" "}
+                        <Clock3 size={15} /> Requested on{" "}
                         {formatDate(reservation.created_at)}
                       </>
                     }
                     badge={
                       reservation.status === "waiting"
-                        ? "En espera"
+                        ? "Waiting"
                         : reservation.status === "fulfilled"
-                          ? "Atendida"
-                          : "Cancelada"
+                          ? "Fulfilled"
+                          : "Canceled"
                     }
                     action={
                       reservation.status === "waiting" && (
@@ -351,8 +351,8 @@ function AccountPage() {
                         >
                           <XCircle size={16} />{" "}
                           {pendingId === reservation.id
-                            ? "Procesando…"
-                            : "Cancelar reserva"}
+                            ? "Processing…"
+                            : "Cancel reservation"}
                         </button>
                       )
                     }
@@ -361,8 +361,8 @@ function AccountPage() {
               </div>
             ) : (
               <EmptyState
-                title="No hay reservas"
-                description="Si un libro de la colección está prestado, podrás reservarlo desde su ficha."
+                title="No reservations"
+                description="When a book in the collection is on loan, you can reserve it from its details page."
               />
             )
           ) : reading.length ? (
@@ -375,10 +375,10 @@ function AccountPage() {
                     <>
                       <BookMarked size={15} />{" "}
                       {item.status === "want_to_read"
-                        ? "Quiero leer"
+                        ? "Want to read"
                         : item.status === "reading"
-                          ? "Leyendo"
-                          : "Terminado"}
+                          ? "Reading"
+                          : "Finished"}
                     </>
                   }
                   badge={formatDate(item.updated_at)}
@@ -390,8 +390,8 @@ function AccountPage() {
                     >
                       <XCircle size={16} />{" "}
                       {pendingId === item.work_id
-                        ? "Procesando…"
-                        : "Quitar de mi lista"}
+                        ? "Processing…"
+                        : "Remove from my list"}
                     </button>
                   }
                 />
@@ -399,8 +399,8 @@ function AccountPage() {
             </div>
           ) : (
             <EmptyState
-              title="Tu lista está vacía"
-              description="Abre la ficha de un libro y guárdalo como próximo, actual o terminado."
+              title="Your reading list is empty"
+              description="Open a book's details and mark it as Want to read, Reading, or Finished."
             />
           )}
         </div>
@@ -436,7 +436,7 @@ function AccountRow({
         )}
       </div>
       <div className="account-row-info">
-        <Link to={`/libro/${item.work_id}`}>{item.title}</Link>
+        <Link to={`/books/${item.work_id}`}>{item.title}</Link>
         <p>{item.author}</p>
         <span>{meta}</span>
       </div>
@@ -462,8 +462,8 @@ function EmptyState({
       </span>
       <h3>{title}</h3>
       <p>{description}</p>
-      <Link className="button button-primary" to="/catalogo">
-        Explorar catálogo <ArrowRight size={16} />
+      <Link className="button button-primary" to="/catalog">
+        Explore catalog <ArrowRight size={16} />
       </Link>
     </div>
   );
