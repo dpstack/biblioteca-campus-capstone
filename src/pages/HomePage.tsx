@@ -17,13 +17,15 @@ export function HomePage() {
   const [query, setQuery] = useState("");
   const [books, setBooks] = useState<Book[]>([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const controller = new AbortController();
     searchBooks({ term: "design", field: "keyword" }, controller.signal)
-      .then((result) =>
-        setBooks(result.books.filter((book) => book.coverId).slice(0, 4)),
-      )
+      .then((result) => {
+        if (!controller.signal.aborted)
+          setBooks(result.books.filter((book) => book.coverId).slice(0, 4));
+      })
       .catch((cause: unknown) => {
         if (!controller.signal.aborted)
           setError(
@@ -31,6 +33,9 @@ export function HomePage() {
               ? cause.message
               : "No se pudieron cargar los libros.",
           );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
   }, []);
@@ -161,7 +166,7 @@ export function HomePage() {
             {error} <Link to="/catalogo">Ir al catálogo</Link>
           </div>
         )}
-        {!error && books.length === 0 && (
+        {loading && (
           <div
             className="book-grid"
             role="status"
@@ -170,6 +175,12 @@ export function HomePage() {
             {[0, 1, 2, 3].map((index) => (
               <div className="book-skeleton" key={index} />
             ))}
+          </div>
+        )}
+        {!loading && !error && books.length === 0 && (
+          <div className="inline-message" role="status">
+            No hay destacados disponibles por ahora.{" "}
+            <Link to="/catalogo">Explorar el catálogo</Link>
           </div>
         )}
         {books.length > 0 && (

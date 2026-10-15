@@ -1,143 +1,228 @@
-# Biblioteca Campus · Proyecto Capstone
+# Biblioteca Campus
 
-SPA de biblioteca universitaria basada en React, TypeScript y Vite. Los metadatos y portadas provienen de [Open Library](https://openlibrary.org/developers/api); las cuentas, el inventario propio, los préstamos, las reservas y la lista de lectura se almacenan en Supabase.
+Aplicación de biblioteca universitaria desarrollada con **React, TypeScript y Vite**. Permite descubrir obras, consultar los ejemplares de la colección, gestionar préstamos y reservas y organizar una lista de lectura. Incluye un panel administrativo para mantener el inventario.
 
-> **Estado:** aplicación académica desplegada en Vercel. Inventario de demostración; no representa existencias reales de una universidad.
+**[Aplicación en vivo](https://biblioteca-campus-capstone-dpstacks-projects.vercel.app/)** · **[Repositorio](https://github.com/dpstack/biblioteca-campus-capstone)** · **[Diapositivas](docs/presentation/Biblioteca-Campus-Demo-Final.pdf)** · **[Guion de demo](docs/DEMO_FINAL.md)**
 
-## Laboratorio Semana 6
+Proyecto académico de Desarrollo Web, Jala University. El inventario es de demostración y no representa existencias de una universidad real.
 
-**URL pública:** https://biblioteca-campus-capstone-dpstacks-projects.vercel.app
+![Inicio de Biblioteca Campus](docs/screenshots/final-home-light-desktop.png)
 
-Consulta [el entregable y la verificación del laboratorio](docs/LAB_SEMANA_6.md).
+## Contenido
 
-```bash
-npm ci
-npm test
-npm run test:coverage
+- [Funcionalidades](#funcionalidades)
+- [Tecnologías y arquitectura](#tecnologías-y-arquitectura)
+- [Instalación](#instalación)
+- [Configuración de Supabase](#configuración-de-supabase)
+- [Pruebas y compilación](#pruebas-y-compilación)
+- [Rutas y uso](#rutas-y-uso)
+- [Despliegue](#despliegue)
+- [Alcance y límites](#alcance-y-límites)
+- [Presentación y documentación](#presentación-y-documentación)
+
+## Funcionalidades
+
+- Catálogo público de Open Library con búsqueda por título, autor o palabra clave, categorías, orden y páginas de 24 obras.
+- Filtro **Disponibles para préstamo**, aplicado al inventario activo antes de ordenar y paginar. Los filtros se conservan en la URL.
+- Fichas con portada, descripción, autores, temas y disponibilidad propia de la biblioteca.
+- Registro, confirmación de correo, inicio de sesión y cierre de sesión con Supabase Auth.
+- Préstamos de 14 días, devoluciones, historial, reservas con prioridad por turno y cancelación de reservas.
+- Estados de lectura **Quiero leer**, **Leyendo** y **Terminado**, con persistencia y eliminación.
+- Administración de obras, ejemplares y retiro/reactivación, con consulta de circulación para cuentas autorizadas.
+- Diseño móvil, navegación por teclado, foco visible, tema claro/oscuro y preferencia persistida en el navegador.
+- Mensajes de carga, errores recuperables y estados vacíos. La portada permite continuar al catálogo si no hay destacados.
+
+## Tecnologías y arquitectura
+
+| Capa                       | Tecnología y responsabilidad                                                   |
+| -------------------------- | ------------------------------------------------------------------------------ |
+| Interfaz                   | React 19, TypeScript, CSS y Lucide                                             |
+| Navegación                 | React Router, rutas personales protegidas y páginas cargadas de forma diferida |
+| Catálogo                   | Open Library Search y Works API                                                |
+| Identidad y datos propios  | Supabase Auth y PostgreSQL                                                     |
+| Reglas de préstamo         | Funciones SQL transaccionales, bloqueo de inventario y políticas RLS           |
+| Pruebas                    | Jest, React Testing Library, Playwright y axe                                  |
+| Construcción y alojamiento | Vite y Vercel                                                                  |
+
+Open Library proporciona metadatos. Supabase conserva usuarios, ejemplares y operaciones de la biblioteca. Ambas fuentes se relacionan por el identificador de obra, como `OL27448W`. Encontrar un título en Open Library no garantiza que pertenezca a la colección.
+
+```text
+src/
+  components/     Layout, tarjetas, controles y selector de tema
+  context/        Sesión compartida y hook useAuth
+  pages/          Inicio, catálogo, ficha, acceso, cuenta y administración
+  lib/            Servicios de Open Library y Supabase
+supabase/
+  migrations/     Esquema y funciones de biblioteca y administración
+  tests/          Comprobaciones SQL con datos que se revierten
+tests/            Pruebas de navegador y tests/unit/
+docs/             Arquitectura, verificación, presentación y guion
 ```
 
-Jest y React Testing Library prueban los componentes `BookCard`, `SiteLayout` y `AuthPage`, el hook `useAuth`, la restauración de sesión y el flujo de tokens con el SDK real y HTTP simulado. Las pruebas unitarias no necesitan credenciales ni conexión externa. Playwright permanece disponible con `npm run test:e2e`.
+Consulta [arquitectura y flujos](docs/ARCHITECTURE.md) para el detalle técnico.
 
-**Verificación del laboratorio (9 de octubre de 2026):** seis suites y 17 pruebas Jest aprobadas; TypeScript y Vite compilados correctamente. Se observaron catálogo, disponibilidad, protección de rutas y carga del historial con una sesión real en producción. El usuario confirmó manualmente registro, recepción de correo, inicio con contraseña y cierre de sesión. Consulta la documentación del laboratorio para distinguir comprobaciones manuales y automatizadas.
+## Instalación
 
-**Autenticación:** Supabase Auth valida correo y contraseña y devuelve access token JWT y refresh token. El SDK persiste la sesión en localStorage, renueva el access token y lo envía como `Authorization: Bearer <token>` al backend REST. `AuthProvider` sincroniza cambios de sesión; Mi biblioteca redirige visitantes al formulario. Las políticas RLS y las funciones SQL autorizan las operaciones en el servidor. Cerrar sesión revoca los refresh tokens y elimina la sesión local. Los JWT emitidos pueden seguir siendo válidos hasta su expiración; el cierre no invalida instantáneamente todos los access tokens. localStorage es accesible a JavaScript: evitar scripts no confiables y mantener la prevención de XSS; nunca guardar contraseñas ni claves secretas en el cliente. La clave publishable identifica el proyecto, no sustituye el token del usuario.
-
-## Estado actual
-
-**Actualización del capstone (9 de octubre de 2026):** lectura persistida; orden global por fecha, popularidad y autor con el alcance descrito abajo; teclado y foco de navegación; mobile-first; carga diferida de rutas y autenticación. Pasaron 60 pruebas Jest, 26 de navegador y comprobaciones reales de préstamos, reservas, lectura y RLS. Consulta [pruebas](docs/TESTING.md), [accesibilidad](docs/ACCESSIBILITY.md) y [rendimiento](docs/PERFORMANCE.md).
-
-- Catálogo público con búsqueda por palabra clave, título o autor; categorías, ordenamiento y paginación. El filtro **Disponibles para préstamo** muestra únicamente obras activas de la colección con ejemplares disponibles.
-- Fichas de obras, portadas, descripción, autores y temas.
-- Diseño responsivo, navegación SPA y ruta de Mi biblioteca con carga diferida. Tema claro y oscuro con control de sol/luna en la cabecera.
-- Registro e inicio de sesión con Supabase Auth.
-- Inventario institucional separado del catálogo externo, préstamos de 14 días, reservas, devoluciones, historial y estados de lectura. Las operaciones de inventario usan funciones SQL transaccionales y políticas RLS.
-
-**Configuración:** cada instalación necesita su propio `.env.local` con la URL y la clave publicable de Supabase. El archivo local está excluido de Git. La migración incluida crea tres obras de ejemplo; no representa existencias institucionales reales.
-
-**Filtro de préstamo:** en Explorar catálogo, marca Disponibles para préstamo. Se combina con búsqueda, categoría y orden; al activarlo o desactivarlo vuelve a la primera página. La URL conserva el filtro (`available=1`) para compartirlo. No requiere iniciar sesión para explorar; solicitar un préstamo sí requiere una cuenta. La disponibilidad se consulta nuevamente al cargar cada página y el backend valida el stock al prestar.
-
-**Alcance del catálogo:** Autor A–Z ordena todos los resultados de búsquedas de hasta 200 obras antes de paginar. Si hay más, pide afinar la búsqueda; nunca presenta un orden parcial como global. Es el alcance elegido para mantener Open Library. La colección de demostración contiene tres obras. Las notificaciones de disponibilidad son una función opcional pendiente.
-
-## Ejecutar localmente
-
-Requisitos: Node.js 24 LTS y npm. Primero configura Supabase como se explica más abajo; después, desde la raíz de este proyecto:
+Requisitos: **Node.js 24.x**, npm y conexión a Internet para consultar los servicios externos.
 
 ```bash
+git clone https://github.com/dpstack/biblioteca-campus-capstone.git
+cd biblioteca-campus-capstone
 npm ci
+cp .env.example .env.local
+```
+
+Completa `.env.local` con la configuración de tu proyecto:
+
+```dotenv
+VITE_SUPABASE_URL=https://TU-PROYECTO.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=TU_CLAVE_PUBLICABLE
+```
+
+La clave publicable identifica el proyecto. Los permisos del usuario dependen de su sesión y del servidor. **Nunca uses una clave secreta o `service_role` en variables `VITE_`.** `.env.local` está excluido de Git.
+
+Después de instalar el esquema de Supabase:
+
+```bash
 npm run dev
 ```
 
-Abre la dirección que indique Vite (por defecto, `http://localhost:5173`). Para revisar la compilación:
+Abre la URL que indique Vite, normalmente `http://localhost:5173`. Reinicia el servidor si cambias las variables. Sin Supabase, la aplicación ofrece el modo de exploración pública, pero no cuentas ni operaciones de préstamo.
+
+## Configuración de Supabase
+
+Para un proyecto nuevo, ejecuta en SQL Editor las migraciones completas **en este orden**:
+
+1. [`20261006_initial_library.sql`](supabase/migrations/20261006_initial_library.sql): inventario de ejemplo, préstamos, reservas, lectura, RLS y funciones base.
+2. [`20261009_admin.sql`](supabase/migrations/20261009_admin.sql): roles administrativos, metadatos y retiro de obras y funciones del panel.
+
+En una base existente, comprueba qué migraciones ya se aplicaron antes de repetir la instalación. La aplicación React no ejecuta migraciones.
+
+Habilita el proveedor Email en Supabase Auth. Configura **Site URL** con la URL pública de tu despliegue y permite las URLs de redirección que utilices, incluida la local para desarrollo. Crea y confirma la cuenta desde `/acceso`. La demostración en vivo debe utilizar una cuenta ya confirmada para evitar depender de la entrega de correo durante la exposición.
+
+Para asignar administración a una cuenta existente, ejecuta desde SQL Editor, sustituyendo el correo:
+
+```sql
+insert into public.library_admins (user_id)
+select id from auth.users
+where lower(email) = lower('admin@example.com')
+on conflict do nothing;
+```
+
+Recarga la sesión para mostrar Administración. Los usuarios comunes no pueden asignarse roles ni escribir directamente en inventario. Consulta [administración](docs/ADMINISTRATION.md) para instalación, revocación y demostración.
+
+### Autenticación y autorización
+
+Supabase Auth devuelve un access token JWT y un refresh token. El SDK conserva y renueva la sesión y envía `Authorization: Bearer <token>` al backend REST. `AuthProvider` comparte la sesión y mantiene un estado de carga mientras se restaura, antes de resolver las rutas personales.
+
+RLS limita los datos personales a su propietario. Las funciones SQL verifican identidad, permisos, ejemplares y turnos antes de modificar existencias. Cerrar sesión elimina la sesión local y revoca los refresh tokens según el comportamiento del SDK. Los access tokens ya emitidos pueden ser válidos hasta su expiración. La persistencia en localStorage requiere mantener la prevención de XSS y evitar scripts no confiables.
+
+## Pruebas y compilación
+
+```bash
+npm test
+npm run test:coverage
+npm run lint
+npm run build
+```
+
+Las pruebas Jest usan respuestas HTTP simuladas y no requieren credenciales ni Internet. La cobertura se limita a los archivos configurados en Jest y no representa cobertura total del producto.
+
+Para las pruebas de navegador:
+
+```bash
+npx playwright install chromium
+npm run test:e2e
+```
+
+Playwright inicia Vite automáticamente. Los recorridos públicos consultan Open Library y los casos de inventario real requieren Supabase configurado. También hay casos con HTTP simulado para comprobar permisos e interacciones sin modificar datos reales. Para usar Chrome instalado en PowerShell:
+
+```powershell
+$env:PLAYWRIGHT_CHANNEL='chrome'
+npm run test:e2e
+```
+
+Para repetir contra el despliegue público:
+
+```powershell
+$env:BASE_URL='https://biblioteca-campus-capstone-dpstacks-projects.vercel.app'
+$env:PLAYWRIGHT_CHANNEL='chrome'
+npm run test:e2e
+```
+
+Las suites [`library_flows.sql`](supabase/tests/library_flows.sql) y [`admin_flows.sql`](supabase/tests/admin_flows.sql) se ejecutan completas en SQL Editor de un proyecto de prueba con ambas migraciones. Crean identidades y obras sintéticas dentro de una transacción y terminan en `ROLLBACK`. No ejecutes fragmentos fuera de esa transacción.
+
+[La verificación de entrega](docs/LAB_SEMANA_7.md) distingue resultados actuales, pruebas SQL realizadas anteriormente y comprobaciones humanas pendientes. [TESTING.md](docs/TESTING.md) conserva el alcance y los comandos.
+
+Para comprobar el paquete de producción local:
 
 ```bash
 npm run build
 npm run preview
 ```
 
-La verificación automatizada inicia Vite si hace falta, usa Chromium y cubre inicio, búsqueda, ficha, acceso, menú móvil y reglas WCAG A/AA detectables por axe. Requiere conexión a Open Library:
+## Rutas y uso
 
-```bash
-npx playwright install chromium
-npm run lint
-npm run test:e2e
-```
+| Ruta                    | Función                                               |
+| ----------------------- | ----------------------------------------------------- |
+| `/`                     | Inicio y búsqueda rápida                              |
+| `/catalogo`             | Búsqueda, filtros, orden y paginación                 |
+| `/catalogo?available=1` | Obras activas con ejemplares disponibles              |
+| `/libro/:workId`        | Ficha y acciones de lectura, préstamo o reserva       |
+| `/acceso`               | Registro e inicio de sesión                           |
+| `/mi-biblioteca`        | Préstamos, historial, reservas y lectura de la cuenta |
+| `/administracion`       | Gestión y circulación para administradores            |
 
-## Capturas de la aplicación
+### Recorrido del lector
 
-![Inicio de Biblioteca Campus en escritorio](docs/screenshots/home-desktop.png)
+1. Activa **Disponibles para préstamo** y abre una obra de la colección.
+2. Inicia sesión y pulsa **Solicitar préstamo** si hay disponibilidad y tu turno lo permite.
+3. Revisa el vencimiento y devuelve el ejemplar desde **Mi biblioteca**. El historial conserva la operación.
+4. Si no quedan ejemplares, solicita una reserva y consulta o cancela su turno.
+5. Guarda y recupera el estado de lectura desde la ficha o la cuenta.
 
-La pantalla inicial permite buscar libros y descubrir obras destacadas obtenidas de Open Library.
+El administrador puede incorporar una obra desde Open Library, definir el total de ejemplares y retirarla de nuevos préstamos. El servidor conserva los préstamos y admite devoluciones de obras retiradas. Las reservas pendientes impiden retirar una obra.
 
-![Inicio de Biblioteca Campus en móvil](docs/screenshots/home-mobile.png)
+El botón de sol/luna sigue inicialmente el sistema y recuerda una elección explícita con `biblioteca-theme-v1` en localStorage. DM Sans se usa para controles y texto, y Playfair Display para encabezados y títulos de obras.
 
-La misma interfaz adapta navegación, buscador y tarjetas a una pantalla pequeña.
+## Despliegue
 
-![Ficha de un libro en escritorio](docs/screenshots/book-desktop.png)
+La versión pública está alojada en **Vercel**, con HTTPS y reescritura de rutas SPA en `vercel.json`.
 
-La ficha muestra metadatos públicos y, por separado, la disponibilidad real de la colección de prueba consultada en Supabase.
+Para desplegar tu propia instalación:
 
-## Conectar Supabase
+1. Importa el repositorio en Vercel y elige **Vite** como framework.
+2. Utiliza **Node.js 24.x**, `npm run build` y directorio de salida `dist`.
+3. Configura `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` para el entorno de destino.
+4. Instala las migraciones en el proyecto Supabase y configura las URLs permitidas de autenticación.
+5. Despliega y verifica el catálogo, una ruta anidada, acceso, inventario y cuenta.
 
-1. Crea un proyecto en [Supabase](https://supabase.com/dashboard).
-2. Abre **SQL Editor** y ejecuta íntegro [`supabase/migrations/20261006_initial_library.sql`](supabase/migrations/20261006_initial_library.sql). Crea tablas, índices, políticas RLS, funciones seguras y tres obras de ejemplo en el inventario. Sustituye estas obras por existencias reales antes de uso institucional.
-3. En **Authentication → Providers**, habilita Email. La confirmación por correo es recomendable. En **Authentication → URL Configuration**, registra la URL local y la futura URL de producción como destinos permitidos.
-4. Copia `.env.example` a `.env.local` y usa **Project URL** y la clave **publishable/anon** del proyecto:
+Las variables `VITE_` se incorporan al construir el frontend: un cambio requiere otro build y despliegue. No es necesario incluir `.env.local` en el repositorio.
 
-   ```dotenv
-   VITE_SUPABASE_URL=https://TU-PROYECTO.supabase.co
-   VITE_SUPABASE_PUBLISHABLE_KEY=TU_CLAVE_PUBLICABLE
-   ```
+## Alcance y límites
 
-5. Reinicia `npm run dev` y crea una cuenta desde `/acceso`. Nunca coloques la clave `service_role` o una clave secreta en variables `VITE_` ni en el navegador.
+- Aplicación académica con inventario de demostración, no un servicio institucional validado para operación real.
+- **Autor A–Z** ordena búsquedas completas de hasta 200 obras. Las mayores requieren afinar filtros. Fecha y popularidad usan el orden de Open Library.
+- El filtro de préstamo consulta existencias actuales. El servidor vuelve a validar disponibilidad y turnos al solicitar el préstamo.
+- La búsqueda administrativa devuelve hasta 24 resultados. Los roles se asignan desde SQL Editor.
+- Open Library puede omitir portadas, autores o descripciones. Sus interrupciones afectan la exploración externa.
+- Las reservas no generan notificaciones automáticas ni asignación automática del ejemplar devuelto.
+- Axe y las pruebas de teclado no equivalen a una certificación de accesibilidad. Falta revisión humana con lector de pantalla.
+- Las mediciones sintéticas de rendimiento anteriores muestran oportunidades de mejora bajo red y CPU limitadas. Conservan su fecha y procedencia en [PERFORMANCE.md](docs/PERFORMANCE.md).
 
-Las migraciones dejan lectura pública de la colección: metadatos, ejemplares y estado de retiro. Cada usuario solo puede leer sus préstamos, reservas y lista de lectura. Las escrituras que cambian existencias se hacen mediante funciones SQL que bloquean las filas para evitar dos préstamos simultáneos del mismo ejemplar. El SQL debe instalarse mediante SQL Editor o una cuenta administrativa, jamás desde el cliente React.
+## Presentación y documentación
 
-## Rutas
+- [Diapositivas de la demo en PDF](docs/presentation/Biblioteca-Campus-Demo-Final.pdf)
+- [Guion, preparación de cuentas y plan alternativo](docs/DEMO_FINAL.md)
+- [Entrega del laboratorio final y revisión entre pares](docs/LAB_SEMANA_7.md)
+- [Arquitectura](docs/ARCHITECTURE.md), [pruebas](docs/TESTING.md), [accesibilidad](docs/ACCESSIBILITY.md) y [administración](docs/ADMINISTRATION.md)
+- [Laboratorio Semana 6](docs/LAB_SEMANA_6.md), conservado como evidencia histórica
 
-### Probar préstamos y lecturas
+## Autoría y fuentes
 
-Inicia sesión y abre `/libro/OL27448W`, una de las obras del inventario de demostración. En la ficha, **Solicitar préstamo** registra el vencimiento a 14 días. En **Mi biblioteca → Préstamos**, **Devolver** restaura el ejemplar y conserva el historial. Cuando una obra no tiene ejemplares disponibles, la ficha permite **Reservar**; la cuenta puede cancelar su reserva. La primera reserva tiene prioridad cuando regresa un ejemplar.
-
-El selector **Mi estado de lectura** guarda y restaura «Quiero leer», «Leyendo» o «Terminado». Puedes quitar el libro desde la ficha o desde la lista de lectura de Mi biblioteca. Las obras externas sin ejemplares propios permiten organizar lecturas, pero no solicitar préstamos.
-
-| Ruta              | Función                                                  |
-| ----------------- | -------------------------------------------------------- |
-| `/`               | Inicio y búsqueda rápida                                 |
-| `/catalogo`       | Catálogo, filtros, orden y paginación                    |
-| `/libro/:workId`  | Ficha de obra y acciones de préstamo o reserva           |
-| `/acceso`         | Registro e inicio de sesión                              |
-| `/mi-biblioteca`  | Préstamos, historial, reservas y lista de lectura        |
-| `/administracion` | Gestión de colección y circulación; solo administradores |
-
-## Administración de la colección
-
-El panel `/administracion` permite buscar obras en Open Library, añadirlas a la colección, ajustar ejemplares, retirar/reactivar obras y consultar préstamos y reservas. El rol se verifica en Supabase en cada operación. Consulta [activación y demostración](docs/ADMINISTRATION.md).
-
-## Arquitectura y límites
-
-Consulta [el diagrama, los flujos y el modelo de datos](docs/ARCHITECTURE.md). `src/lib/openLibrary.ts` normaliza los metadatos externos y valida los IDs de obras; `src/lib/library.ts` concentra las operaciones Supabase; `src/context/AuthContext.tsx` comparte la sesión. Open Library **no** indica la disponibilidad física de esta biblioteca: esa información proviene únicamente de `library_books`.
-
-### Límites conocidos
-
-- Autor A–Z ordena búsquedas completas de hasta 200 obras antes de paginar; búsquedas mayores deben afinarse. Fecha y popularidad usan el orden de la API; popularidad no mide préstamos institucionales.
-- La cola se protege en el servidor. La ficha puede ofrecer un préstamo que se rechace por prioridad de una reserva ajena. El panel muestra los turnos por obra; no hay avisos automáticos.
-- La búsqueda administrativa presenta los primeros 24 resultados; afinar título o autor permite localizar una obra concreta. Los roles se asignan desde SQL Editor.
-- Las rutas y Supabase se cargan de forma diferida. Las mediciones móviles con red y CPU limitadas siguen mostrando oportunidades de mejora; PERFORMANCE.md conserva resultados y procedencia anteriores a esta ampliación.
-- Falta revisión auditiva humana con NVDA/Narrador; las pruebas de teclado y axe no certifican accesibilidad completa.
-
-Antes de un uso institucional: cargar inventario real, decidir políticas de préstamos y reservas, configurar correo de confirmación y recuperación, añadir pruebas contra un proyecto Supabase de **pruebas** y revisar accesibilidad con teclado y lector de pantalla. El despliegue usa HTTPS; configura en Supabase las URLs permitidas para autenticación y redirecciones. No publiques `.env.local` ni utilices una clave `service_role` en variables `VITE_`.
-
-## Fuentes técnicas
+Proyecto de [dpstack](https://github.com/dpstack) para Desarrollo Web en Jala University. Metadatos y portadas de Open Library.
 
 - [Open Library Search API](https://openlibrary.org/dev/docs/api/search)
-- [Open Library Works API](https://openlibrary.org/dev/docs/api/books)
-- [Supabase Auth para React](https://supabase.com/docs/guides/auth/quickstarts/react)
+- [Supabase Auth](https://supabase.com/docs/guides/auth/quickstarts/react)
 - [Supabase Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security)
-
-## Tema claro y oscuro
-
-El botón de sol/luna de la cabecera alterna el tema en todas las páginas, incluida Administración. Inicialmente sigue la preferencia del sistema operativo; al elegir un tema guarda `light` o `dark` en `biblioteca-theme-v1` de localStorage y lo conserva al recargar y navegar. La preferencia pertenece al navegador, no a la cuenta. Se sincroniza entre pestañas. Si el almacenamiento está bloqueado, el control funciona durante la visita. Un script pequeño aplica el tema antes del contenido; `color-scheme` adapta los controles nativos.
-
-## Tipografía
-
-DM Sans se usa para texto y controles; Playfair Display para encabezados y títulos de tarjetas, mediante la variable compartida `--font-heading`. Los metadatos y etiquetas de contenido tienen al menos 12 px; autores y enlaces de tarjetas usan 13 px. El descriptor compacto de la marca conserva 10 px. Los títulos de tarjetas usan interlineado de 1,3 para facilitar la lectura en varias líneas. La misma jerarquía se aplica en ambos temas.
+- [Funciones de PostgreSQL en Supabase](https://supabase.com/docs/guides/database/functions)
