@@ -2,11 +2,9 @@
 
 A university library application built with **React, TypeScript, and Vite**. Discover books, check the library's own copies, manage loans and reservations, and organize a reading list. Authorized administrators can maintain the collection and review circulation.
 
-**[Live application](https://biblioteca-campus-capstone-dpstacks-projects.vercel.app/)** · **[Source repository](https://github.com/dpstack/biblioteca-campus-capstone)** · **[Presentation slides](docs/presentation/Biblioteca-Campus-Demo-Final.pdf)** · **[Demo script](docs/DEMO_FINAL.md)**
+**[Live application](https://biblioteca-campus-capstone-dpstacks-projects.vercel.app/)** · **[Source repository](https://github.com/dpstack/biblioteca-campus-capstone)**
 
 An academic Web Development capstone for Jala University. The demonstration inventory does not represent a real university's holdings. The interface, documentation, presentation, and demo script are in English. Existing repository and deployment identifiers remain unchanged.
-
-![Campus Library home page](docs/screenshots/final-home-light-desktop.png)
 
 ## Contents
 
@@ -18,7 +16,6 @@ An academic Web Development capstone for Jala University. The demonstration inve
 - [Routes and usage](#routes-and-usage)
 - [Deployment](#deployment)
 - [Scope](#scope)
-- [Presentation and documentation](#presentation-and-documentation)
 
 ## Features
 
@@ -56,10 +53,7 @@ supabase/
   migrations/     Library schema, permissions, and administrative functions
   tests/          SQL checks inside transactions that roll back
 tests/            Browser tests and tests/unit/
-docs/             Architecture, verification, slides, and demo script
 ```
-
-See [architecture and data flows](docs/ARCHITECTURE.md).
 
 ## Installation
 
@@ -109,7 +103,7 @@ where lower(email) = lower('admin@example.com')
 on conflict do nothing;
 ```
 
-Refresh the session to display Administration. Regular users cannot assign themselves roles or write inventory directly. See [administration](docs/ADMINISTRATION.md).
+Refresh the session to display Administration. Regular users cannot assign themselves roles or write inventory directly.
 
 ### Authentication and authorization
 
@@ -152,7 +146,7 @@ npm run test:e2e
 
 Run [`library_flows.sql`](supabase/tests/library_flows.sql) and [`admin_flows.sql`](supabase/tests/admin_flows.sql) in full in SQL Editor of a test project with both migrations installed. They create synthetic identities and works inside a transaction ending in `ROLLBACK`. Keep the transaction intact.
 
-[The final lab report](docs/LAB_SEMANA_7.md) distinguishes current browser checks from historical SQL and manual checks. [Testing documentation](docs/TESTING.md) explains the scope and commands.
+The English release passed 66 Jest tests in 14 suites and 30 desktop/mobile browser scenarios, including repeats after transient external-service failures. Selected-file line coverage was 87.58%. Real SQL checks and user-confirmed authentication were recorded separately on October 9, 2026; browser fixtures do not establish database permissions.
 
 To inspect a production build locally:
 
@@ -210,15 +204,7 @@ Vite embeds `VITE_` variables at build time. Changing them requires another buil
 - Open Library may omit metadata or become unavailable. Original titles are preserved in their source language.
 - Reservations enforce queue priority without automatic email notifications or automatic copy assignment.
 - Axe and keyboard checks are not a complete accessibility certification.
-- Historical synthetic performance results retain their original dates and provenance in [PERFORMANCE.md](docs/PERFORMANCE.md).
-
-## Presentation and documentation
-
-- [Eight-slide presentation](docs/presentation/Biblioteca-Campus-Demo-Final.pdf)
-- [Demo script and rehearsal worksheet](docs/DEMO_FINAL.md)
-- [Final lab report](docs/LAB_SEMANA_7.md)
-- [Architecture](docs/ARCHITECTURE.md), [testing](docs/TESTING.md), [accessibility](docs/ACCESSIBILITY.md), and [administration](docs/ADMINISTRATION.md)
-- [Historical Week 6 lab](docs/LAB_SEMANA_6.md)
+- Performance audits are synthetic measurements, not real-user Core Web Vitals.
 
 ## Credits
 

@@ -33,3 +33,6 @@ tmp/
 *.njsproj
 *.sln
 *.sw?
+
+# Local presentation, screenshots, and academic delivery materials.
+/docs/
